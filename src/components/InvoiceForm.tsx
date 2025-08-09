@@ -16,6 +16,7 @@ interface InvoiceFormProps {
 export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUpdateItems, onUpdateBankDetails, onUpdateField }: InvoiceFormProps) => {
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [selectedBankDetails, setSelectedBankDetails] = useState<string>(charityBankDetails[0].name);
+  const [isItemsExpanded, setIsItemsExpanded] = useState<boolean>(false);
 
   useEffect(() => {
     // Take only the first 2 items from the invoice data
@@ -173,14 +174,33 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Separator />
 
-        <Text size="4" weight="bold">Invoice Items</Text>
-        {items.map((item, index) => (
-          <InvoiceItemCard
-            key={index}
-            item={item}
-            onUpdate={(field, value) => updateItem(index, field, value)}
-          />
-        ))}
+        <Card style={{ padding: '10px' }}>
+          <Flex 
+            direction="column" 
+            gap="3"
+            style={{ cursor: 'pointer' }}
+            onClick={() => setIsItemsExpanded(!isItemsExpanded)}
+          >
+            <Flex justify="between" align="center">
+              <Text size="4" weight="bold">Invoice Items</Text>
+              <Text size="3" style={{ transform: isItemsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
+                ▼
+              </Text>
+            </Flex>
+            
+            {isItemsExpanded && (
+              <Flex direction="column" gap="2">
+                {items.map((item, index) => (
+                  <InvoiceItemCard
+                    key={index}
+                    item={item}
+                    onUpdate={(field, value) => updateItem(index, field, value)}
+                  />
+                ))}
+              </Flex>
+            )}
+          </Flex>
+        </Card>
 
         <Separator />
 
