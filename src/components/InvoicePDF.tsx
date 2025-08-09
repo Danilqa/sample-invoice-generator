@@ -1,5 +1,5 @@
 import { Document, Page, Text as PDFText, View, StyleSheet } from '@react-pdf/renderer';
-import { InvoiceData } from '../types/invoice';
+import type { InvoiceData } from '../types/invoice';
 
 // PDF Styles
 const pdfStyles = StyleSheet.create({
@@ -39,6 +39,56 @@ const pdfStyles = StyleSheet.create({
   },
   section: {
     marginBottom: 20,
+  },
+  // Standard UK Bill Bank Details Section
+  bankDetailsSection: {
+    marginBottom: 25,
+    borderWidth: 1,
+    borderColor: '#000000',
+    padding: 15,
+    backgroundColor: '#ffffff',
+  },
+  bankDetailsTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#000000',
+    textAlign: 'left',
+  },
+  bankDetailsRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  bankDetailsLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#000000',
+    width: '25%',
+  },
+  bankDetailsValue: {
+    fontSize: 12,
+    fontWeight: 'normal',
+    color: '#000000',
+    width: '75%',
+    fontFamily: 'Helvetica',
+  },
+  bankDetailsBox: {
+    borderWidth: 1,
+    borderColor: '#000000',
+    padding: 8,
+    marginTop: 10,
+    backgroundColor: '#f9f9f9',
+  },
+  bankDetailsBoxTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#000000',
+  },
+  bankDetailsBoxText: {
+    fontSize: 12,
+    color: '#000000',
+    marginBottom: 2,
   },
   row: {
     flexDirection: 'row',
@@ -112,13 +162,6 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
         <PDFText style={pdfStyles.text}>{data.clientEmail}</PDFText>
       </View>
 
-      {/* Payment Information */}
-      <View style={pdfStyles.section}>
-        <PDFText style={pdfStyles.subtitle}>Payment Details:</PDFText>
-        <PDFText style={pdfStyles.text}>Sort Code: {data.sortCode}</PDFText>
-        <PDFText style={pdfStyles.text}>Account Number: {data.accountNumber}</PDFText>
-      </View>
-
       <View style={{ marginVertical: 20, height: 1, backgroundColor: '#e5e7eb' }} />
 
       {/* Items Table */}
@@ -158,6 +201,34 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
           <PDFText style={pdfStyles.totalValue}>
             £{(data.items.reduce((sum, item) => sum + item.total, 0) * 1.2).toFixed(2)}
           </PDFText>
+        </View>
+      </View>
+
+      {/* Standard UK Bill Bank Details Section */}
+      <View style={pdfStyles.bankDetailsSection}>
+        <PDFText style={pdfStyles.bankDetailsTitle}>BANK DETAILS</PDFText>
+        <View style={pdfStyles.bankDetailsRow}>
+          <PDFText style={pdfStyles.bankDetailsLabel}>Account Name:</PDFText>
+          <PDFText style={pdfStyles.bankDetailsValue}>{data.companyName}</PDFText>
+        </View>
+        <View style={pdfStyles.bankDetailsRow}>
+          <PDFText style={pdfStyles.bankDetailsLabel}>Sort Code:</PDFText>
+          <PDFText style={pdfStyles.bankDetailsValue}>{data.sortCode}</PDFText>
+        </View>
+        <View style={pdfStyles.bankDetailsRow}>
+          <PDFText style={pdfStyles.bankDetailsLabel}>Account Number:</PDFText>
+          <PDFText style={pdfStyles.bankDetailsValue}>{data.accountNumber}</PDFText>
+        </View>
+        <View style={pdfStyles.bankDetailsRow}>
+          <PDFText style={pdfStyles.bankDetailsLabel}>Reference:</PDFText>
+          <PDFText style={pdfStyles.bankDetailsValue}>{data.invoiceNumber}</PDFText>
+        </View>
+        
+        <View style={pdfStyles.bankDetailsBox}>
+          <PDFText style={pdfStyles.bankDetailsBoxTitle}>IMPORTANT - Please quote your reference number when making payment</PDFText>
+          <PDFText style={pdfStyles.bankDetailsBoxText}>• Use your invoice number as the payment reference</PDFText>
+          <PDFText style={pdfStyles.bankDetailsBoxText}>• Payment should be made within 30 days</PDFText>
+          <PDFText style={pdfStyles.bankDetailsBoxText}>• Bank transfers may take 2-3 working days to clear</PDFText>
         </View>
       </View>
 
