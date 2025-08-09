@@ -1,7 +1,7 @@
 import { Card, Text } from '@radix-ui/themes';
 import { PDFViewer } from '@react-pdf/renderer';
 import { InvoicePDF } from './InvoicePDF';
-import { InvoiceData } from '../types/invoice';
+import type { InvoiceData } from '../types/invoice';
 
 interface PDFPreviewProps {
   invoiceData: InvoiceData;

@@ -9,7 +9,7 @@ interface InvoiceFormProps {
   onDownload: () => void;
   pdfBlob: Blob | null;
   onUpdateItems?: (items: InvoiceItem[]) => void;
-  onUpdateBankDetails?: (sortCode: string, accountNumber: string) => void;
+  onUpdateBankDetails?: (sortCode: string, accountNumber: string, accountName: string) => void;
 }
 
 export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUpdateItems, onUpdateBankDetails }: InvoiceFormProps) => {
@@ -51,11 +51,11 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     
     if (value === 'random') {
       const randomDetails = generateRandomInvalidBankDetails();
-      onUpdateBankDetails?.(randomDetails.sortCode, randomDetails.accountNumber);
+      onUpdateBankDetails?.(randomDetails.sortCode, randomDetails.accountNumber, randomDetails.name);
     } else {
       const selectedDetails = charityBankDetails.find(bank => bank.name === value);
       if (selectedDetails) {
-        onUpdateBankDetails?.(selectedDetails.sortCode, selectedDetails.accountNumber);
+        onUpdateBankDetails?.(selectedDetails.sortCode, selectedDetails.accountNumber, selectedDetails.name);
       }
     }
   };
@@ -117,7 +117,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
           </Text>
         </Box>
 
-        <Grid columns="2" gap="3">
+        <Grid columns="3" gap="3">
           <Box>
             <Text as="label" htmlFor="sortCode" size="2" weight="bold">Sort Code</Text>
             <TextField.Root id="sortCode" value={invoiceData.sortCode} readOnly />
@@ -125,6 +125,10 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
           <Box>
             <Text as="label" htmlFor="accountNumber" size="2" weight="bold">Account Number</Text>
             <TextField.Root id="accountNumber" value={invoiceData.accountNumber} readOnly />
+          </Box>
+          <Box>
+            <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
+            <TextField.Root id="accountName" value={invoiceData.accountName} readOnly />
           </Box>
         </Grid>
 

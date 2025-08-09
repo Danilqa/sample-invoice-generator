@@ -209,7 +209,7 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
         <PDFText style={pdfStyles.bankDetailsTitle}>BANK DETAILS</PDFText>
         <View style={pdfStyles.bankDetailsRow}>
           <PDFText style={pdfStyles.bankDetailsLabel}>Account Name:</PDFText>
-          <PDFText style={pdfStyles.bankDetailsValue}>{data.companyName}</PDFText>
+          <PDFText style={pdfStyles.bankDetailsValue}>{data.accountName}</PDFText>
         </View>
         <View style={pdfStyles.bankDetailsRow}>
           <PDFText style={pdfStyles.bankDetailsLabel}>Sort Code:</PDFText>

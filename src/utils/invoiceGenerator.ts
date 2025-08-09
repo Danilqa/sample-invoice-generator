@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
-import { InvoiceData } from '../types/invoice';
+import type { InvoiceData } from '../types/invoice';
 
 export const generateFakeInvoice = (): InvoiceData => {
-  const items = Array.from({ length: faker.number.int({ min: 3, max: 8 }) }, () => {
+  const items = Array.from({ length: 2 }, () => {
     const quantity = faker.number.int({ min: 1, max: 10 });
     const unitPrice = faker.number.float({ min: 10, max: 500, fractionDigits: 2 });
     return {
@@ -13,11 +13,13 @@ export const generateFakeInvoice = (): InvoiceData => {
     };
   });
 
+  const companyName = faker.company.name();
+
   return {
     invoiceNumber: `INV-${faker.number.int({ min: 1000, max: 9999 })}`,
     issueDate: faker.date.recent({ days: 30 }).toLocaleDateString('en-GB'),
     dueDate: faker.date.soon({ days: 30 }).toLocaleDateString('en-GB'),
-    companyName: faker.company.name(),
+    companyName,
     companyAddress: faker.location.streetAddress(true),
     companyPhone: faker.phone.number(),
     companyEmail: faker.internet.email(),
@@ -27,6 +29,7 @@ export const generateFakeInvoice = (): InvoiceData => {
     clientEmail: faker.internet.email(),
     sortCode: `${faker.number.int({ min: 10, max: 99 })}-${faker.number.int({ min: 10, max: 99 })}-${faker.number.int({ min: 10, max: 99 })}`,
     accountNumber: faker.number.int({ min: 10000000, max: 99999999 }).toString(),
+    accountName: companyName,
     items,
   };
 };

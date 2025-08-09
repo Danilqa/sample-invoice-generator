@@ -12,6 +12,7 @@ export interface InvoiceData {
   clientEmail: string;
   sortCode: string;
   accountNumber: string;
+  accountName: string;
   items: InvoiceItem[];
 }
 

@@ -33,8 +33,8 @@ function App() {
     setPdfBlob(blob);
   };
 
-  const handleUpdateBankDetails = async (sortCode: string, accountNumber: string) => {
-    const updatedData = { ...invoiceData, sortCode, accountNumber };
+  const handleUpdateBankDetails = async (sortCode: string, accountNumber: string, accountName: string) => {
+    const updatedData = { ...invoiceData, sortCode, accountNumber, accountName };
     setInvoiceData(updatedData);
     
     // Regenerate PDF blob with updated bank details
