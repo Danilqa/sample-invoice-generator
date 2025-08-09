@@ -34,21 +34,21 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
-    
+
     // Recalculate total
     if (field === 'quantity' || field === 'unitPrice') {
       const quantity = field === 'quantity' ? Number(value) : newItems[index].quantity;
       const unitPrice = field === 'unitPrice' ? Number(value) : newItems[index].unitPrice;
       newItems[index].total = quantity * unitPrice;
     }
-    
+
     setItems(newItems);
     onUpdateItems?.(newItems);
   };
 
   const handleBankDetailsChange = (value: string) => {
     setSelectedBankDetails(value);
-    
+
     if (value === 'random') {
       const randomDetails = generateRandomInvalidBankDetails();
       onUpdateBankDetails?.(randomDetails.sortCode, randomDetails.accountNumber, randomDetails.name);
@@ -65,10 +65,8 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
   return (
     <Card style={{ flex: 1, padding: '20px', overflow: 'auto' }}>
       <Flex direction="column" gap="4">
-        <Text size="6" weight="bold">UK Invoice Generator</Text>
-        
         <Button size="3" onClick={onGenerate}>
-          Generate New Invoice
+          Regenerate data
         </Button>
 
         <Button size="3" onClick={onDownload} disabled={!pdfBlob}>
@@ -100,21 +98,23 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Text size="4" weight="bold">Bank Details</Text>
         <Box>
-          <Text as="label" htmlFor="bankDetails" size="2" weight="bold">Select Bank Details</Text>
-          <Select.Root value={selectedBankDetails} onValueChange={handleBankDetailsChange}>
-            <Select.Trigger placeholder="Choose bank details..." />
-            <Select.Content>
-              {charityBankDetails.map((bank) => (
-                <Select.Item key={bank.name} value={bank.name}>
-                  {bank.name} - {bank.sortCode} / {bank.accountNumber}
-                </Select.Item>
-              ))}
-              <Select.Item value="random">Generate random invalid</Select.Item>
-            </Select.Content>
-          </Select.Root>
-          <Text size="1" color="gray" style={{ marginTop: '4px' }}>
-            These are real charity bank details from public sources
-          </Text>
+          <Flex direction="column" gap="2">
+              <Text as="label" htmlFor="bankDetails" size="2" weight="bold">Select Bank Details</Text>
+              <Select.Root value={selectedBankDetails} onValueChange={handleBankDetailsChange}>
+                <Select.Trigger placeholder="Choose bank details..." />
+                <Select.Content>
+                  {charityBankDetails.map((bank) => (
+                    <Select.Item key={bank.name} value={bank.name}>
+                      {bank.name} - {bank.sortCode} / {bank.accountNumber}
+                    </Select.Item>
+                  ))}
+                  <Select.Item value="random">Generate random invalid</Select.Item>
+                </Select.Content>
+              </Select.Root>
+              <Text size="1" color="gray">
+                  Real charity bank details from public sources.
+              </Text>
+          </Flex>
         </Box>
 
         <Grid columns="3" gap="3">
@@ -136,9 +136,9 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Text size="4" weight="bold">Invoice Items</Text>
         {items.map((item, index) => (
-          <InvoiceItemCard 
-            key={index} 
-            item={item} 
+          <InvoiceItemCard
+            key={index}
+            item={item}
             onUpdate={(field, value) => updateItem(index, field, value)}
           />
         ))}
@@ -163,7 +163,7 @@ const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
     <Grid columns="4" gap="2">
       <Box>
         <Text size="2" weight="bold">Description</Text>
-        <TextField.Root 
+        <TextField.Root
           size="1"
           value={item.description}
           onChange={(e) => onUpdate('description', e.target.value)}
@@ -172,7 +172,7 @@ const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
       </Box>
       <Box>
         <Text size="2" weight="bold">Qty</Text>
-        <TextField.Root 
+        <TextField.Root
           size="1"
           type="number"
           value={item.quantity}
@@ -182,7 +182,7 @@ const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
       </Box>
       <Box>
         <Text size="2" weight="bold">Unit Price</Text>
-        <TextField.Root 
+        <TextField.Root
           size="1"
           type="number"
           value={item.unitPrice}
@@ -198,5 +198,3 @@ const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
     </Grid>
   </Card>
 );
-
-
