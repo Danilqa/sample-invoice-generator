@@ -234,8 +234,7 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
 
       {/* Footer */}
       <View style={pdfStyles.footer}>
-        <PDFText>Thank you for your business!</PDFText>
-        <PDFText>Payment is due within 30 days of invoice date.</PDFText>
+        <PDFText>This is not a real invoice. Don't pay!</PDFText>
       </View>
     </Page>
   </Document>

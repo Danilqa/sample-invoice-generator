@@ -10,9 +10,10 @@ interface InvoiceFormProps {
   pdfBlob: Blob | null;
   onUpdateItems?: (items: InvoiceItem[]) => void;
   onUpdateBankDetails?: (sortCode: string, accountNumber: string, accountName: string) => void;
+  onUpdateField?: (field: keyof InvoiceData, value: string) => void;
 }
 
-export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUpdateItems, onUpdateBankDetails }: InvoiceFormProps) => {
+export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUpdateItems, onUpdateBankDetails, onUpdateField }: InvoiceFormProps) => {
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [selectedBankDetails, setSelectedBankDetails] = useState<string>('');
 
@@ -75,22 +76,39 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Separator />
 
+        <Text size="4" weight="bold">Invoice Details</Text>
         <Grid columns="2" gap="3">
           <Box>
             <Text as="label" htmlFor="invoiceNumber" size="2" weight="bold">Invoice Number</Text>
-            <TextField.Root id="invoiceNumber" value={invoiceData.invoiceNumber} readOnly />
+            <TextField.Root 
+              id="invoiceNumber" 
+              value={invoiceData.invoiceNumber} 
+              onChange={(e) => onUpdateField?.('invoiceNumber', e.target.value)}
+            />
           </Box>
           <Box>
             <Text as="label" htmlFor="issueDate" size="2" weight="bold">Issue Date</Text>
-            <TextField.Root id="issueDate" value={invoiceData.issueDate} readOnly />
+            <TextField.Root 
+              id="issueDate" 
+              value={invoiceData.issueDate} 
+              onChange={(e) => onUpdateField?.('issueDate', e.target.value)}
+            />
           </Box>
           <Box>
             <Text as="label" htmlFor="dueDate" size="2" weight="bold">Due Date</Text>
-            <TextField.Root id="dueDate" value={invoiceData.dueDate} readOnly />
+            <TextField.Root 
+              id="dueDate" 
+              value={invoiceData.dueDate} 
+              onChange={(e) => onUpdateField?.('dueDate', e.target.value)}
+            />
           </Box>
           <Box>
             <Text as="label" htmlFor="companyName" size="2" weight="bold">Company Name</Text>
-            <TextField.Root id="companyName" value={invoiceData.companyName} readOnly />
+            <TextField.Root 
+              id="companyName" 
+              value={invoiceData.companyName} 
+              onChange={(e) => onUpdateField?.('companyName', e.target.value)}
+            />
           </Box>
         </Grid>
 
@@ -120,15 +138,27 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
         <Grid columns="3" gap="3">
           <Box>
             <Text as="label" htmlFor="sortCode" size="2" weight="bold">Sort Code</Text>
-            <TextField.Root id="sortCode" value={invoiceData.sortCode} readOnly />
+            <TextField.Root 
+              id="sortCode" 
+              value={invoiceData.sortCode} 
+              onChange={(e) => onUpdateField?.('sortCode', e.target.value)}
+            />
           </Box>
           <Box>
             <Text as="label" htmlFor="accountNumber" size="2" weight="bold">Account Number</Text>
-            <TextField.Root id="accountNumber" value={invoiceData.accountNumber} readOnly />
+            <TextField.Root 
+              id="accountNumber" 
+              value={invoiceData.accountNumber} 
+              onChange={(e) => onUpdateField?.('accountNumber', e.target.value)}
+            />
           </Box>
           <Box>
             <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
-            <TextField.Root id="accountName" value={invoiceData.accountName} readOnly />
+            <TextField.Root 
+              id="accountName" 
+              value={invoiceData.accountName} 
+              onChange={(e) => onUpdateField?.('accountName', e.target.value)}
+            />
           </Box>
         </Grid>
 

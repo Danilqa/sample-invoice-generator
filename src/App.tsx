@@ -42,6 +42,15 @@ function App() {
     setPdfBlob(blob);
   };
 
+  const handleUpdateField = async (field: keyof InvoiceData, value: string) => {
+    const updatedData = { ...invoiceData, [field]: value };
+    setInvoiceData(updatedData);
+    
+    // Regenerate PDF blob with updated field
+    const blob = await generatePDFBlob(updatedData);
+    setPdfBlob(blob);
+  };
+
   return (
     <Theme>
       <Container size="4" style={{ height: '100%', padding: '20px' }}>
@@ -58,6 +67,7 @@ function App() {
             pdfBlob={pdfBlob}
             onUpdateItems={handleUpdateItems}
             onUpdateBankDetails={handleUpdateBankDetails}
+            onUpdateField={handleUpdateField}
           />
           <PDFPreview 
             invoiceData={invoiceData}
