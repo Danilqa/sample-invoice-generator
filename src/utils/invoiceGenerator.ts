@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker';
 import type { InvoiceData } from '../types/invoice';
+import { charityBankDetails } from './bankDetails';
 
 export const generateFakeInvoice = (): InvoiceData => {
   const items = Array.from({ length: 2 }, () => {
@@ -14,6 +15,7 @@ export const generateFakeInvoice = (): InvoiceData => {
   });
 
   const companyName = faker.company.name();
+  const defaultBank = charityBankDetails[0];
 
   return {
     invoiceNumber: `INV-${faker.number.int({ min: 1000, max: 9999 })}`,
@@ -27,9 +29,9 @@ export const generateFakeInvoice = (): InvoiceData => {
     clientName: faker.person.fullName(),
     clientAddress: faker.location.streetAddress(true),
     clientEmail: faker.internet.email(),
-    sortCode: `${faker.number.int({ min: 10, max: 99 })}-${faker.number.int({ min: 10, max: 99 })}-${faker.number.int({ min: 10, max: 99 })}`,
-    accountNumber: faker.number.int({ min: 10000000, max: 99999999 }).toString(),
-    accountName: companyName,
+    sortCode: defaultBank.sortCode,
+    accountNumber: defaultBank.accountNumber,
+    accountName: defaultBank.name,
     items,
   };
 };

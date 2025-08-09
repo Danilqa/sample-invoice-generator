@@ -11,15 +11,31 @@ function App() {
 
   // Generate invoice on component mount
   useEffect(() => {
-    handleGenerate();
+    handleGenerate(false);
   }, []); // Empty dependency array - only run once on mount
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (preserveBankDetails: boolean = false) => {
     const newData = generateFakeInvoice();
-    setInvoiceData(newData);
+    
+    // Preserve contact information (client details)
+    const updatedData = {
+      ...newData,
+      clientName: invoiceData.clientName,
+      clientAddress: invoiceData.clientAddress,
+      clientEmail: invoiceData.clientEmail,
+    };
+    
+    // Preserve bank details if requested
+    if (preserveBankDetails) {
+      updatedData.sortCode = invoiceData.sortCode;
+      updatedData.accountNumber = invoiceData.accountNumber;
+      updatedData.accountName = invoiceData.accountName;
+    }
+    
+    setInvoiceData(updatedData);
     
     // Generate PDF blob
-    const blob = await generatePDFBlob(newData);
+    const blob = await generatePDFBlob(updatedData);
     setPdfBlob(blob);
   };
 

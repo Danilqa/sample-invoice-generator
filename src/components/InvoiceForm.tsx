@@ -5,7 +5,7 @@ import { charityBankDetails, generateRandomInvalidBankDetails } from '../utils/b
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
-  onGenerate: () => void;
+  onGenerate: (preserveBankDetails?: boolean) => void;
   onDownload: () => void;
   pdfBlob: Blob | null;
   onUpdateItems?: (items: InvoiceItem[]) => void;
@@ -33,14 +33,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     setItems(firstTwoItems);
   }, [invoiceData.items]);
 
-  // Set default bank details on component mount
-  useEffect(() => {
-    // Only set default bank details if they're not already set
-    if (!invoiceData.sortCode || !invoiceData.accountNumber || !invoiceData.accountName) {
-      const defaultBank = charityBankDetails[0];
-      onUpdateBankDetails?.(defaultBank.sortCode, defaultBank.accountNumber, defaultBank.name);
-    }
-  }, []); // Empty dependency array - only run once on mount
+
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...items];
@@ -61,6 +54,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     setSelectedBankDetails(value);
 
     if (value === 'random') {
+      // Generate random invalid bank details
       const randomDetails = generateRandomInvalidBankDetails();
       onUpdateBankDetails?.(randomDetails.sortCode, randomDetails.accountNumber, randomDetails.name);
     } else {
@@ -76,7 +70,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
   return (
     <Card style={{ flex: 1, padding: '20px', overflow: 'auto' }}>
       <Flex direction="column" gap="4">
-        <Button size="3" onClick={onGenerate}>
+        <Button size="3" onClick={() => onGenerate(true)}>
           Regenerate data
         </Button>
 
