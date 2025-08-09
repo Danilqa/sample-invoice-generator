@@ -1,0 +1,21 @@
+export interface InvoiceData {
+  invoiceNumber: string;
+  issueDate: string;
+  dueDate: string;
+  companyName: string;
+  companyAddress: string;
+  companyPhone: string;
+  companyEmail: string;
+  companyVatNumber: string;
+  clientName: string;
+  clientAddress: string;
+  clientEmail: string;
+  items: InvoiceItem[];
+}
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
