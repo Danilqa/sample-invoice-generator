@@ -95,6 +95,21 @@ function App() {
             pdfBlob={pdfBlob}
           />
         </Flex>
+        
+        {/* Footer */}
+        <Box mt="6" style={{ textAlign: 'center', padding: '20px 0' }}>
+          <Text size="2" color="gray">
+            Vibe-coded with 💛 by{' '}
+            <a 
+              href="https://github.com/Danilqa/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ color: 'inherit', textDecoration: 'underline' }}
+            >
+              Dan
+            </a>
+          </Text>
+        </Box>
       </Container>
     </Theme>
   );
