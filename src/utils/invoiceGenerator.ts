@@ -14,14 +14,13 @@ export const generateFakeInvoice = (): InvoiceData => {
     };
   });
 
-  const companyName = faker.company.name();
   const defaultBank = charityBankDetails[0];
 
   return {
     invoiceNumber: `INV-${faker.number.int({ min: 1000, max: 9999 })}`,
     issueDate: faker.date.recent({ days: 30 }).toLocaleDateString('en-GB'),
     dueDate: faker.date.soon({ days: 30 }).toLocaleDateString('en-GB'),
-    companyName,
+    companyName: defaultBank.name,
     companyAddress: faker.location.streetAddress(true),
     companyPhone: faker.phone.number(),
     companyEmail: faker.internet.email(),

@@ -57,10 +57,14 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
       // Generate random invalid bank details
       const randomDetails = generateRandomInvalidBankDetails();
       onUpdateBankDetails?.(randomDetails.sortCode, randomDetails.accountNumber, randomDetails.name);
+      // Update company name to match account name
+      onUpdateField?.('companyName', randomDetails.name);
     } else {
       const selectedDetails = charityBankDetails.find(bank => bank.name === value);
       if (selectedDetails) {
         onUpdateBankDetails?.(selectedDetails.sortCode, selectedDetails.accountNumber, selectedDetails.name);
+        // Update company name to match account name
+        onUpdateField?.('companyName', selectedDetails.name);
       }
     }
   };

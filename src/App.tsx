@@ -55,7 +55,7 @@ function App() {
   };
 
   const handleUpdateBankDetails = async (sortCode: string, accountNumber: string, accountName: string) => {
-    const updatedData = { ...invoiceData, sortCode, accountNumber, accountName };
+    const updatedData = { ...invoiceData, sortCode, accountNumber, accountName, companyName: accountName };
     setInvoiceData(updatedData);
     
     // Regenerate PDF blob with updated bank details
