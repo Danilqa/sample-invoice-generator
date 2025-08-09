@@ -217,7 +217,7 @@ interface InvoiceItemCardProps {
 
 const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
   <Card style={{ padding: '10px' }}>
-    <Grid columns="4" gap="2">
+    <Grid columns="4" gap="2" align="end">
       <Box>
         <Text size="2" weight="bold">Description</Text>
         <TextField.Root
@@ -248,10 +248,10 @@ const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
           step="0.01"
         />
       </Box>
-      <Box>
-        <Text size="2" weight="bold">Total</Text>
-        <Text size="2">£{item.total.toFixed(2)}</Text>
-      </Box>
+      <Box >
+        <Text size="2" weight="bold">Total</Text><br/>
+        <Text size="1" weight="medium">£{item.total.toFixed(2)}</Text>
+      </Box >
     </Grid>
   </Card>
 );
