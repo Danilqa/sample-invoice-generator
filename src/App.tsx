@@ -77,7 +77,7 @@ function App() {
     <Theme>
       <Container size="4" style={{ height: '100%', padding: '20px' }}>
         <Box mb="4">
-          <Text size="6" weight="bold">Sample Invoice Generator</Text>
+          <Text size="6" weight="bold">📄 Sample Invoice Generator</Text>
           <br/>
           <Text size="1">For development and testing purposes only.</Text>
         </Box>

@@ -84,7 +84,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Separator />
 
-        <Text size="4" weight="bold">Invoice Details</Text>
+        <Text size="4" weight="bold">📋 Invoice Details</Text>
         <Grid columns="2" gap="3">
           <Box>
             <Text as="label" htmlFor="invoiceNumber" size="2" weight="bold">Invoice Number</Text>
@@ -122,7 +122,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Separator />
 
-        <Text size="4" weight="bold">Bank Details</Text>
+        <Text size="4" weight="bold">🏦 Bank Details</Text>
         <Box>
           <Flex direction="column" gap="2">
               <Text as="label" htmlFor="bankDetails" size="2" weight="bold">Select Bank Details</Text>
@@ -180,7 +180,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
             onClick={() => setIsItemsExpanded(!isItemsExpanded)}
           >
             <Flex justify="between" align="center">
-              <Text size="4" weight="bold">Invoice Items</Text>
+              <Text size="4" weight="bold">📦 Invoice Items</Text>
               <Text size="3" style={{ transform: isItemsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
                 ▼
               </Text>
