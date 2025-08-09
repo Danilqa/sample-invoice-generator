@@ -15,7 +15,7 @@ interface InvoiceFormProps {
 
 export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUpdateItems, onUpdateBankDetails, onUpdateField }: InvoiceFormProps) => {
   const [items, setItems] = useState<InvoiceItem[]>([]);
-  const [selectedBankDetails, setSelectedBankDetails] = useState<string>('');
+  const [selectedBankDetails, setSelectedBankDetails] = useState<string>(charityBankDetails[0].name);
 
   useEffect(() => {
     // Take only the first 2 items from the invoice data
@@ -31,6 +31,15 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     }
     setItems(firstTwoItems);
   }, [invoiceData.items]);
+
+  // Set default bank details on component mount
+  useEffect(() => {
+    // Only set default bank details if they're not already set
+    if (!invoiceData.sortCode || !invoiceData.accountNumber || !invoiceData.accountName) {
+      const defaultBank = charityBankDetails[0];
+      onUpdateBankDetails?.(defaultBank.sortCode, defaultBank.accountNumber, defaultBank.name);
+    }
+  }, []); // Empty dependency array - only run once on mount
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...items];

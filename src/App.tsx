@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Theme, Container, Flex, Text, Box } from '@radix-ui/themes';
 import { InvoiceForm, PDFPreview } from './components';
 import { generateFakeInvoice, generatePDFBlob, downloadPDF } from './utils';
@@ -8,6 +8,11 @@ import './App.css';
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>(generateFakeInvoice());
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+
+  // Generate invoice on component mount
+  useEffect(() => {
+    handleGenerate();
+  }, []); // Empty dependency array - only run once on mount
 
   const handleGenerate = async () => {
     const newData = generateFakeInvoice();
