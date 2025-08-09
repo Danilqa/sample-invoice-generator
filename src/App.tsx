@@ -98,7 +98,7 @@ function App() {
         </Flex>
         
         {/* Footer */}
-        <Box mt="6" style={{ textAlign: 'center', padding: '20px 0' }}>
+        <Box mt="2" style={{ textAlign: 'center' }}>
           <Text size="2" color="gray">
             Vibe-coded with 💛 by{' '}
             <a 

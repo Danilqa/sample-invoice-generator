@@ -74,13 +74,15 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
   return (
     <Card style={{ flex: 1, padding: '20px', overflow: 'auto' }}>
       <Flex direction="column" gap="4">
-        <Button size="3" onClick={() => onGenerate(true)}>
-          Regenerate data
-        </Button>
+        <Flex direction="row" gap="3">
+          <Button size="3" onClick={() => onGenerate(true)}>
+            🔄 Regenerate data
+          </Button>
 
-        <Button size="3" onClick={onDownload} disabled={!pdfBlob}>
-          Download PDF
-        </Button>
+          <Button size="3" onClick={onDownload} disabled={!pdfBlob}>
+            📥 Download PDF
+          </Button>
+        </Flex>
 
         <Separator />
 
