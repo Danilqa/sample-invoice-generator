@@ -95,10 +95,6 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
       <View style={pdfStyles.header}>
         <View style={pdfStyles.companyInfo}>
           <PDFText style={pdfStyles.title}>{data.companyName}</PDFText>
-          <PDFText style={pdfStyles.text}>{data.companyAddress}</PDFText>
-          <PDFText style={pdfStyles.text}>Phone: {data.companyPhone}</PDFText>
-          <PDFText style={pdfStyles.text}>Email: {data.companyEmail}</PDFText>
-          <PDFText style={pdfStyles.text}>VAT Number: {data.companyVatNumber}</PDFText>
         </View>
         <View style={pdfStyles.invoiceInfo}>
           <PDFText style={pdfStyles.subtitle}>INVOICE</PDFText>
@@ -114,6 +110,13 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
         <PDFText style={pdfStyles.text}>{data.clientName}</PDFText>
         <PDFText style={pdfStyles.text}>{data.clientAddress}</PDFText>
         <PDFText style={pdfStyles.text}>{data.clientEmail}</PDFText>
+      </View>
+
+      {/* Payment Information */}
+      <View style={pdfStyles.section}>
+        <PDFText style={pdfStyles.subtitle}>Payment Details:</PDFText>
+        <PDFText style={pdfStyles.text}>Sort Code: {data.sortCode}</PDFText>
+        <PDFText style={pdfStyles.text}>Account Number: {data.accountNumber}</PDFText>
       </View>
 
       <View style={{ marginVertical: 20, height: 1, backgroundColor: '#e5e7eb' }} />

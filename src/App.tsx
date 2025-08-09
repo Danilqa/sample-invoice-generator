@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Theme, Container, Flex } from '@radix-ui/themes';
 import { InvoiceForm, PDFPreview } from './components';
 import { generateFakeInvoice, generatePDFBlob, downloadPDF } from './utils';
-import type { InvoiceData } from './types/invoice';
+import type { InvoiceData, InvoiceItem } from './types/invoice';
 import './App.css';
 
 function App() {
@@ -24,6 +24,24 @@ function App() {
     }
   };
 
+  const handleUpdateItems = async (items: InvoiceItem[]) => {
+    const updatedData = { ...invoiceData, items };
+    setInvoiceData(updatedData);
+    
+    // Regenerate PDF blob with updated items
+    const blob = await generatePDFBlob(updatedData);
+    setPdfBlob(blob);
+  };
+
+  const handleUpdateBankDetails = async (sortCode: string, accountNumber: string) => {
+    const updatedData = { ...invoiceData, sortCode, accountNumber };
+    setInvoiceData(updatedData);
+    
+    // Regenerate PDF blob with updated bank details
+    const blob = await generatePDFBlob(updatedData);
+    setPdfBlob(blob);
+  };
+
   return (
     <Theme>
       <Container size="4" style={{ height: '100vh', padding: '20px' }}>
@@ -33,6 +51,8 @@ function App() {
             onGenerate={handleGenerate}
             onDownload={handleDownload}
             pdfBlob={pdfBlob}
+            onUpdateItems={handleUpdateItems}
+            onUpdateBankDetails={handleUpdateBankDetails}
           />
           <PDFPreview 
             invoiceData={invoiceData}
