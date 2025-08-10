@@ -144,8 +144,6 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
           });
         }
       });
-      // Update company name to match account name
-      onUpdateField?.('companyName', randomDetails.name);
     } else {
       const selectedDetails = currentBankDetails.find(bank => bank.name === value);
       if (selectedDetails) {
