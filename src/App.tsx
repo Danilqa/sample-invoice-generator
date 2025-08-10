@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Theme, Container, Flex, Text, Box } from '@radix-ui/themes';
 import { InvoiceForm, PDFPreview } from './components';
 import { generateFakeInvoice, generatePDFBlob, downloadPDF } from './utils';
-import type { InvoiceData, InvoiceItem } from './types/invoice';
+import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from './types/invoice';
 import './App.css';
 
 function App() {
@@ -11,7 +11,12 @@ function App() {
 
   // Generate invoice on component mount
   useEffect(() => {
-    handleGenerate(false);
+    // Add a small delay to ensure component is fully mounted
+    const timer = setTimeout(() => {
+      handleGenerate(false);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []); // Empty dependency array - only run once on mount
 
   const handleGenerate = async (preserveBankDetails: boolean = false) => {
@@ -54,8 +59,15 @@ function App() {
     setPdfBlob(blob);
   };
 
-  const handleUpdateBankDetails = async (sortCode: string, accountNumber: string, accountName: string) => {
-    const updatedData = { ...invoiceData, sortCode, accountNumber, accountName, companyName: accountName };
+  const handleUpdateBankDetails = async (bankDetails: BankDetailsUpdate) => {
+    const updatedData = { 
+      ...invoiceData, 
+      sortCode: bankDetails.sortCode || '', 
+      accountNumber: bankDetails.accountNumber || '', 
+      accountName: bankDetails.accountName, 
+      companyName: bankDetails.accountName,
+      iban: bankDetails.iban || ''
+    };
     setInvoiceData(updatedData);
     
     // Regenerate PDF blob with updated bank details

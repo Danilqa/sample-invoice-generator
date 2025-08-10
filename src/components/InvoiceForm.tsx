@@ -1,7 +1,8 @@
 import { Flex, Card, Text, Button, TextField, Separator, Grid, Box, Select } from '@radix-ui/themes';
 import { useState, useEffect } from 'react';
-import type { InvoiceData, InvoiceItem } from '../types/invoice';
-import { charityBankDetails, generateRandomInvalidBankDetails } from '../utils/bankDetails';
+import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from '../types/invoice';
+import { getBankDetailsByCurrency, generateRandomInvalidBankDetails } from '../utils/bankDetails';
+import { currencies, getCurrencyByCode } from '../utils/currencies';
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
@@ -9,14 +10,70 @@ interface InvoiceFormProps {
   onDownload: () => void;
   pdfBlob: Blob | null;
   onUpdateItems?: (items: InvoiceItem[]) => void;
-  onUpdateBankDetails?: (sortCode: string, accountNumber: string, accountName: string) => void;
+  onUpdateBankDetails?: (bankDetails: BankDetailsUpdate) => void;
   onUpdateField?: (field: keyof InvoiceData, value: string) => void;
 }
 
 export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUpdateItems, onUpdateBankDetails, onUpdateField }: InvoiceFormProps) => {
   const [items, setItems] = useState<InvoiceItem[]>([]);
-  const [selectedBankDetails, setSelectedBankDetails] = useState<string>(charityBankDetails[0].name);
+  const [selectedBankDetails, setSelectedBankDetails] = useState<string>('');
   const [isItemsExpanded, setIsItemsExpanded] = useState<boolean>(false);
+
+  // Helper function to handle currency-specific logic
+  const handleCurrencySpecificLogic = (currency: string, callback: (type: 'GBP' | 'EUR') => void) => {
+    switch (currency) {
+      case 'EUR':
+        callback('EUR');
+        break;
+      case 'GBP':
+      default:
+        callback('GBP');
+        break;
+    }
+  };
+
+  // Helper function to check if currency is EUR
+  const isEURCurrency = (currency: string): boolean => {
+    switch (currency) {
+      case 'EUR':
+        return true;
+      case 'GBP':
+      default:
+        return false;
+    }
+  };
+
+  // Get bank details based on current currency
+  const currentBankDetails = getBankDetailsByCurrency(invoiceData.currency as 'GBP' | 'EUR');
+  
+  // Set initial selected bank details if not set
+  useEffect(() => {
+    if (!selectedBankDetails && currentBankDetails.length > 0) {
+      setSelectedBankDetails(currentBankDetails[0].name);
+    }
+  }, [currentBankDetails, selectedBankDetails]);
+
+  // Update bank details when currency changes
+  useEffect(() => {
+    if (currentBankDetails.length > 0) {
+      const firstBank = currentBankDetails[0];
+      handleCurrencySpecificLogic(invoiceData.currency, (currencyType) => {
+        if (currencyType === 'EUR') {
+          onUpdateBankDetails?.({
+            accountName: firstBank.name,
+            iban: firstBank.iban || ''
+          });
+        } else {
+          onUpdateBankDetails?.({
+            sortCode: firstBank.sortCode || '',
+            accountNumber: firstBank.accountNumber || '',
+            accountName: firstBank.name
+          });
+        }
+      });
+      setSelectedBankDetails(firstBank.name);
+    }
+  }, [invoiceData.currency]);
 
   useEffect(() => {
     // Take only the first 2 items from the invoice data
@@ -72,14 +129,38 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     
     if (value === 'random') {
       // Generate random invalid bank details
-      const randomDetails = generateRandomInvalidBankDetails();
-      onUpdateBankDetails?.(randomDetails.sortCode, randomDetails.accountNumber, randomDetails.name);
-      // Update company name to match account name
-      onUpdateField?.('companyName', randomDetails.name);
+      const randomDetails = generateRandomInvalidBankDetails(invoiceData.currency as 'GBP' | 'EUR');
+      handleCurrencySpecificLogic(invoiceData.currency, (currencyType) => {
+        if (currencyType === 'EUR') {
+          onUpdateBankDetails?.({
+            accountName: randomDetails.name,
+            iban: randomDetails.iban || ''
+          });
+        } else {
+          onUpdateBankDetails?.({
+            sortCode: randomDetails.sortCode || '',
+            accountNumber: randomDetails.accountNumber || '',
+            accountName: randomDetails.name
+          });
+        }
+      });
     } else {
-      const selectedDetails = charityBankDetails.find(bank => bank.name === value);
+      const selectedDetails = currentBankDetails.find(bank => bank.name === value);
       if (selectedDetails) {
-        onUpdateBankDetails?.(selectedDetails.sortCode, selectedDetails.accountNumber, selectedDetails.name);
+        handleCurrencySpecificLogic(invoiceData.currency, (currencyType) => {
+          if (currencyType === 'EUR') {
+            onUpdateBankDetails?.({
+              accountName: selectedDetails.name,
+              iban: selectedDetails.iban || ''
+            });
+          } else {
+            onUpdateBankDetails?.({
+              sortCode: selectedDetails.sortCode || '',
+              accountNumber: selectedDetails.accountNumber || '',
+              accountName: selectedDetails.name
+            });
+          }
+        });
       }
     }
   };
@@ -144,52 +225,93 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
         <Separator />
 
         <Text size="4" weight="bold">🏦 Bank Details</Text>
-        <Box>
-          <Flex direction="column" gap="2">
-              <Text as="label" htmlFor="bankDetails" size="2" weight="bold">Select Bank Details</Text>
-              <Select.Root value={selectedBankDetails} onValueChange={handleBankDetailsChange}>
-                <Select.Trigger placeholder="Choose bank details..." />
+        <Grid gap="3" columns="70px 1fr">
+          <Box>
+            <Flex direction="column" gap="2">
+              <Text as="label" htmlFor="currency" size="2" weight="bold">Currency</Text>
+              <Select.Root
+                value={invoiceData.currency} 
+                onValueChange={(value) => onUpdateField?.('currency', value)}
+              >
+                <Select.Trigger placeholder="Choose currency..." />
                 <Select.Content>
-                  {charityBankDetails.map((bank) => (
-                    <Select.Item key={bank.name} value={bank.name}>
-                      {bank.name} - {bank.sortCode} / {bank.accountNumber}
+                  {currencies.map((currency) => (
+                    <Select.Item key={currency.code} value={currency.code}>
+                      {currency.flag}
                     </Select.Item>
                   ))}
-                  <Select.Item value="random">Generate random invalid</Select.Item>
                 </Select.Content>
               </Select.Root>
-              <Text size="1" color="gray">
-                  Real charity bank details from public sources.
-              </Text>
-          </Flex>
-        </Box>
-
-        <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3">
-          <Box>
-            <Text as="label" htmlFor="sortCode" size="2" weight="bold">Sort Code</Text>
-            <TextField.Root 
-              id="sortCode" 
-              value={invoiceData.sortCode} 
-              onChange={(e) => onUpdateField?.('sortCode', e.target.value)}
-            />
+            </Flex>
           </Box>
           <Box>
-            <Text as="label" htmlFor="accountNumber" size="2" weight="bold">Account Number</Text>
-            <TextField.Root 
-              id="accountNumber" 
-              value={invoiceData.accountNumber} 
-              onChange={(e) => onUpdateField?.('accountNumber', e.target.value)}
-            />
-          </Box>
-          <Box>
-            <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
-            <TextField.Root 
-              id="accountName" 
-              value={invoiceData.accountName} 
-              onChange={(e) => onUpdateField?.('accountName', e.target.value)}
-            />
+            <Flex direction="column" gap="2">
+                <Text as="label" htmlFor="bankDetails" size="2" weight="bold">Select Bank Details</Text>
+                <Select.Root value={selectedBankDetails} onValueChange={handleBankDetailsChange}>
+                  <Select.Trigger placeholder="Choose bank details..." />
+                  <Select.Content>
+                    {currentBankDetails.map((details) => (
+                      <Select.Item key={details.name} value={details.name}>
+                        {details.name}
+                      </Select.Item>
+                    ))}
+                    <Select.Item value="random">Generate random invalid</Select.Item>
+                  </Select.Content>
+                </Select.Root>
+                <Text size="1" color="gray">
+                    Real charity bank details from public sources.
+                </Text>
+            </Flex>
           </Box>
         </Grid>
+
+        {isEURCurrency(invoiceData.currency) ? (
+          <Grid columns={{ initial: "1", sm: "2" }} gap="3">
+            <Box>
+              <Text as="label" htmlFor="iban" size="2" weight="bold">IBAN</Text>
+              <TextField.Root 
+                id="iban" 
+                value={invoiceData.iban} 
+                onChange={(e) => onUpdateField?.('iban', e.target.value)}
+              />
+            </Box>
+            <Box>
+              <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
+              <TextField.Root 
+                id="accountName" 
+                value={invoiceData.accountName} 
+                onChange={(e) => onUpdateField?.('accountName', e.target.value)}
+              />
+            </Box>
+          </Grid>
+        ) : (
+          <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3">
+            <Box>
+              <Text as="label" htmlFor="sortCode" size="2" weight="bold">Sort Code</Text>
+              <TextField.Root 
+                id="sortCode" 
+                value={invoiceData.sortCode} 
+                onChange={(e) => onUpdateField?.('sortCode', e.target.value)}
+              />
+            </Box>
+            <Box>
+              <Text as="label" htmlFor="accountNumber" size="2" weight="bold">Account Number</Text>
+              <TextField.Root 
+                id="accountNumber" 
+                value={invoiceData.accountNumber} 
+                onChange={(e) => onUpdateField?.('accountNumber', e.target.value)}
+              />
+            </Box>
+            <Box>
+              <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
+              <TextField.Root 
+                id="accountName" 
+                value={invoiceData.accountName} 
+                onChange={(e) => onUpdateField?.('accountName', e.target.value)}
+              />
+            </Box>
+          </Grid>
+        )}
 
         <Separator />
 
@@ -213,6 +335,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
                   <InvoiceItemCard
                     key={index}
                     item={item}
+                    currency={invoiceData.currency}
                     onUpdate={(field, value) => updateItem(index, field, value)}
                   />
                 ))}
@@ -224,7 +347,11 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
         <Separator />
 
         <Text size="4" weight="bold">
-          Total: £{(totalAmount * 1.2).toFixed(2)} (inc. VAT)
+          Total: {(() => {
+            const currency = getCurrencyByCode(invoiceData.currency);
+            const symbol = currency?.symbol || '£';
+            return `${symbol}${(totalAmount * 1.2).toFixed(2)} (inc. VAT)`;
+          })()}
         </Text>
       </Flex>
     </Card>
@@ -233,10 +360,11 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
 interface InvoiceItemCardProps {
   item: InvoiceItem;
+  currency: string;
   onUpdate: (field: keyof InvoiceItem, value: string | number) => void;
 }
 
-const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
+const InvoiceItemCard = ({ item, currency, onUpdate }: InvoiceItemCardProps) => (
   <Card style={{ padding: '10px' }}>
     <Grid columns="4" gap="2" align="end">
       <Box>
@@ -270,10 +398,12 @@ const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
       </Box>
       <Box >
         <Text size="2" weight="bold">Total</Text><br/>
-        <Text size="1" weight="medium">£{(() => {
+        <Text size="1" weight="medium">{(() => {
           const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
           const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
-          return (quantity * unitPrice).toFixed(2);
+          const currencyInfo = getCurrencyByCode(currency);
+          const symbol = currencyInfo?.symbol || '£';
+          return `${symbol}${(quantity * unitPrice).toFixed(2)}`;
         })()}</Text>
       </Box >
     </Grid>

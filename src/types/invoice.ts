@@ -13,6 +13,8 @@ export interface InvoiceData {
   sortCode: string;
   accountNumber: string;
   accountName: string;
+  iban: string;
+  currency: string;
   items: InvoiceItem[];
 }
 
@@ -21,4 +23,11 @@ export interface InvoiceItem {
   quantity: number | '';
   unitPrice: number | '';
   total: number;
+}
+
+export interface BankDetailsUpdate {
+  sortCode?: string;
+  accountNumber?: string;
+  accountName: string;
+  iban?: string;
 }
