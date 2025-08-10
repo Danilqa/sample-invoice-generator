@@ -24,3 +24,10 @@ export interface InvoiceItem {
   unitPrice: number | '';
   total: number;
 }
+
+export interface BankDetailsUpdate {
+  sortCode?: string;
+  accountNumber?: string;
+  accountName: string;
+  iban?: string;
+}

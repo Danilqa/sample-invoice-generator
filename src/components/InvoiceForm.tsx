@@ -1,6 +1,6 @@
 import { Flex, Card, Text, Button, TextField, Separator, Grid, Box, Select } from '@radix-ui/themes';
 import { useState, useEffect } from 'react';
-import type { InvoiceData, InvoiceItem } from '../types/invoice';
+import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from '../types/invoice';
 import { getBankDetailsByCurrency, generateRandomInvalidBankDetails } from '../utils/bankDetails';
 import { currencies, getCurrencyByCode } from '../utils/currencies';
 
@@ -10,7 +10,7 @@ interface InvoiceFormProps {
   onDownload: () => void;
   pdfBlob: Blob | null;
   onUpdateItems?: (items: InvoiceItem[]) => void;
-  onUpdateBankDetails?: (sortCode: string, accountNumber: string, accountName: string, iban?: string) => void;
+  onUpdateBankDetails?: (bankDetails: BankDetailsUpdate) => void;
   onUpdateField?: (field: keyof InvoiceData, value: string) => void;
 }
 
@@ -59,9 +59,16 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
       const firstBank = currentBankDetails[0];
       handleCurrencySpecificLogic(invoiceData.currency, (currencyType) => {
         if (currencyType === 'EUR') {
-          onUpdateBankDetails?.('', '', firstBank.name, firstBank.iban || '');
+          onUpdateBankDetails?.({
+            accountName: firstBank.name,
+            iban: firstBank.iban || ''
+          });
         } else {
-          onUpdateBankDetails?.(firstBank.sortCode || '', firstBank.accountNumber || '', firstBank.name);
+          onUpdateBankDetails?.({
+            sortCode: firstBank.sortCode || '',
+            accountNumber: firstBank.accountNumber || '',
+            accountName: firstBank.name
+          });
         }
       });
       setSelectedBankDetails(firstBank.name);
@@ -125,9 +132,16 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
       const randomDetails = generateRandomInvalidBankDetails(invoiceData.currency as 'GBP' | 'EUR');
       handleCurrencySpecificLogic(invoiceData.currency, (currencyType) => {
         if (currencyType === 'EUR') {
-          onUpdateBankDetails?.('', '', randomDetails.name, randomDetails.iban || '');
+          onUpdateBankDetails?.({
+            accountName: randomDetails.name,
+            iban: randomDetails.iban || ''
+          });
         } else {
-          onUpdateBankDetails?.(randomDetails.sortCode || '', randomDetails.accountNumber || '', randomDetails.name);
+          onUpdateBankDetails?.({
+            sortCode: randomDetails.sortCode || '',
+            accountNumber: randomDetails.accountNumber || '',
+            accountName: randomDetails.name
+          });
         }
       });
       // Update company name to match account name
@@ -137,9 +151,16 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
       if (selectedDetails) {
         handleCurrencySpecificLogic(invoiceData.currency, (currencyType) => {
           if (currencyType === 'EUR') {
-            onUpdateBankDetails?.('', '', selectedDetails.name, selectedDetails.iban || '');
+            onUpdateBankDetails?.({
+              accountName: selectedDetails.name,
+              iban: selectedDetails.iban || ''
+            });
           } else {
-            onUpdateBankDetails?.(selectedDetails.sortCode || '', selectedDetails.accountNumber || '', selectedDetails.name);
+            onUpdateBankDetails?.({
+              sortCode: selectedDetails.sortCode || '',
+              accountNumber: selectedDetails.accountNumber || '',
+              accountName: selectedDetails.name
+            });
           }
         });
       }
