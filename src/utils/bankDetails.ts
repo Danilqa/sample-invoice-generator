@@ -129,9 +129,62 @@ export const getBankDetailsByCurrency = (currency: 'GBP' | 'EUR'): BankDetails[]
 export const generateRandomInvalidBankDetails = (currency: 'GBP' | 'EUR' = 'GBP'): BankDetails => {
   switch (currency) {
     case 'EUR': {
-      // Generate random IBAN for EUR
+      // Generate random IBAN for EUR with more realistic format
       const countryCode = ['DE', 'FR', 'BE', 'NL', 'AT', 'IT', 'ES'][Math.floor(Math.random() * 7)];
-      const randomIBAN = `${countryCode}${Math.floor(Math.random() * 99).toString().padStart(2, '0')} ${Math.random().toString(36).substring(2, 6).toUpperCase()} ${Math.random().toString(36).substring(2, 6).toUpperCase()} ${Math.random().toString(36).substring(2, 6).toUpperCase()} ${Math.random().toString(36).substring(2, 6).toUpperCase()} ${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      const checkDigits = Math.floor(Math.random() * 99).toString().padStart(2, '0');
+      
+      // Generate bank code and account number based on country
+      let bankCode, accountNumber;
+      switch (countryCode) {
+        case 'DE': { // Germany: 8 digits bank code + 10 digits account {
+          bankCode = Math.floor(Math.random() * 99999999).toString().padStart(8, '0');
+          accountNumber = Math.floor(Math.random() * 9999999999).toString().padStart(10, '0');
+          break;
+        }
+        case 'FR': { // France: 5 digits bank code + 5 digits branch + 11 digits account
+          bankCode = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
+          const branchCode = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
+          accountNumber = Math.floor(Math.random() * 99999999999).toString().padStart(11, '0');
+          bankCode = bankCode + branchCode;
+          break;
+        }
+        case 'BE': { // Belgium: 3 digits bank code + 7 digits account
+          bankCode = Math.floor(Math.random() * 999).toString().padStart(3, '0');
+          accountNumber = Math.floor(Math.random() * 9999999).toString().padStart(7, '0');
+          break;
+        }
+        case 'NL': { // Netherlands: 4 digits bank code + 10 digits account
+          bankCode = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+          accountNumber = Math.floor(Math.random() * 9999999999).toString().padStart(10, '0');
+          break;
+        }
+        case 'AT': { // Austria: 5 digits bank code + 11 digits account
+          bankCode = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
+          accountNumber = Math.floor(Math.random() * 99999999999).toString().padStart(11, '0');
+          break;
+        }
+        case 'IT': { // Italy: 1 letter + 3 digits bank code + 1 letter + 15 digits account
+          const bankLetter1 = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+          const bankDigits = Math.floor(Math.random() * 999).toString().padStart(3, '0');
+          const bankLetter2 = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+          bankCode = bankLetter1 + bankDigits + bankLetter2;
+          accountNumber = Math.floor(Math.random() * 999999999999999).toString().padStart(15, '0');
+          break;
+        }
+        case 'ES': {// Spain: 4 digits bank code + 4 digits branch + 2 digits check + 10 digits account
+          bankCode = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+          const branchCode = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+          const checkCode = Math.floor(Math.random() * 99).toString().padStart(2, '0');
+          accountNumber = Math.floor(Math.random() * 9999999999).toString().padStart(10, '0');
+          bankCode = bankCode + branchCode + checkCode;
+          break;
+        }
+        default:
+          bankCode = Math.floor(Math.random() * 99999999).toString().padStart(8, '0');
+          accountNumber = Math.floor(Math.random() * 9999999999).toString().padStart(10, '0');
+      }
+      
+      const randomIBAN = `${countryCode}${checkDigits} ${bankCode} ${accountNumber}`;
       
       return {
         name: faker.company.name(),
