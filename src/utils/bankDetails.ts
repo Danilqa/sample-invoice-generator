@@ -85,12 +85,12 @@ export const gbpBankDetails: BankDetails[] = [
 
 export const eurBankDetails: BankDetails[] = [
   {
-    name: "Alliance for Middle East Peace (via ALLMEP France)",
+    name: "Alliance for Middle East Peace",
     iban: "FR76 3000 4005 7500 0102 2446 410",
     currency: "EUR"
   },
   {
-    name: "Islamic Relief UK (Euro donations)",
+    name: "Islamic Relief UK",
     iban: "GB27 BARC 2007 7175 7517 55",
     currency: "EUR"
   },
@@ -105,7 +105,7 @@ export const eurBankDetails: BankDetails[] = [
     currency: "EUR"
   },
   {
-    name: "Myriad Europe (King Baudouin Foundation)",
+    name: "Myriad Europe",
     iban: "BE10 0000 0000 0404",
     currency: "EUR"
   },
@@ -115,9 +115,6 @@ export const eurBankDetails: BankDetails[] = [
     currency: "EUR"
   }
 ];
-
-// Legacy export for backward compatibility
-export const charityBankDetails: BankDetails[] = [...gbpBankDetails, ...eurBankDetails];
 
 export const getBankDetailsByCurrency = (currency: 'GBP' | 'EUR'): BankDetails[] => {
   switch (currency) {

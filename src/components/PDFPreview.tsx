@@ -16,8 +16,10 @@ export const PDFPreview = ({ invoiceData, pdfBlob }: PDFPreviewProps) => {
     sortCode: invoiceData.sortCode,
     accountNumber: invoiceData.accountNumber,
     accountName: invoiceData.accountName,
+    iban: invoiceData.iban,
     companyName: invoiceData.companyName,
     clientName: invoiceData.clientName,
+    currency: invoiceData.currency,
     items: invoiceData.items
   });
 
