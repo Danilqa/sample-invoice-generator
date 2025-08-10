@@ -20,10 +20,13 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
   const [isItemsExpanded, setIsItemsExpanded] = useState<boolean>(false);
 
   // Helper function to handle currency-specific logic
-  const handleCurrencySpecificLogic = (currency: string, callback: (type: 'GBP' | 'EUR') => void) => {
+  const handleCurrencySpecificLogic = (currency: string, callback: (type: 'GBP' | 'EUR' | 'USD') => void) => {
     switch (currency) {
       case 'EUR':
         callback('EUR');
+        break;
+      case 'USD':
+        callback('USD');
         break;
       case 'GBP':
       default:
@@ -38,13 +41,26 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
       case 'EUR':
         return true;
       case 'GBP':
+      case 'USD':
+      default:
+        return false;
+    }
+  };
+
+  // Helper function to check if currency is USD
+  const isUSDCurrency = (currency: string): boolean => {
+    switch (currency) {
+      case 'USD':
+        return true;
+      case 'GBP':
+      case 'EUR':
       default:
         return false;
     }
   };
 
   // Get bank details based on current currency
-  const currentBankDetails = getBankDetailsByCurrency(invoiceData.currency as 'GBP' | 'EUR');
+  const currentBankDetails = getBankDetailsByCurrency(invoiceData.currency as 'GBP' | 'EUR' | 'USD');
   
   // Set initial selected bank details if not set
   useEffect(() => {
@@ -62,6 +78,12 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
           onUpdateBankDetails?.({
             accountName: firstBank.name,
             iban: firstBank.iban || ''
+          });
+        } else if (currencyType === 'USD') {
+          onUpdateBankDetails?.({
+            accountName: firstBank.name,
+            iban: firstBank.iban || '',
+            swiftBic: firstBank.swiftBic || ''
           });
         } else {
           onUpdateBankDetails?.({
@@ -129,12 +151,18 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     
     if (value === 'random') {
       // Generate random invalid bank details
-      const randomDetails = generateRandomInvalidBankDetails(invoiceData.currency as 'GBP' | 'EUR');
+      const randomDetails = generateRandomInvalidBankDetails(invoiceData.currency as 'GBP' | 'EUR' | 'USD');
       handleCurrencySpecificLogic(invoiceData.currency, (currencyType) => {
         if (currencyType === 'EUR') {
           onUpdateBankDetails?.({
             accountName: randomDetails.name,
             iban: randomDetails.iban || ''
+          });
+        } else if (currencyType === 'USD') {
+          onUpdateBankDetails?.({
+            accountName: randomDetails.name,
+            iban: randomDetails.iban || '',
+            swiftBic: randomDetails.swiftBic || ''
           });
         } else {
           onUpdateBankDetails?.({
@@ -152,6 +180,12 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
             onUpdateBankDetails?.({
               accountName: selectedDetails.name,
               iban: selectedDetails.iban || ''
+            });
+          } else if (currencyType === 'USD') {
+            onUpdateBankDetails?.({
+              accountName: selectedDetails.name,
+              iban: selectedDetails.iban || '',
+              swiftBic: selectedDetails.swiftBic || ''
             });
           } else {
             onUpdateBankDetails?.({
@@ -273,6 +307,33 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
                 id="iban" 
                 value={invoiceData.iban} 
                 onChange={(e) => onUpdateField?.('iban', e.target.value)}
+              />
+            </Box>
+            <Box>
+              <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
+              <TextField.Root 
+                id="accountName" 
+                value={invoiceData.accountName} 
+                onChange={(e) => onUpdateField?.('accountName', e.target.value)}
+              />
+            </Box>
+          </Grid>
+        ) : isUSDCurrency(invoiceData.currency) ? (
+          <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3">
+            <Box>
+              <Text as="label" htmlFor="iban" size="2" weight="bold">IBAN</Text>
+              <TextField.Root 
+                id="iban" 
+                value={invoiceData.iban} 
+                onChange={(e) => onUpdateField?.('iban', e.target.value)}
+              />
+            </Box>
+            <Box>
+              <Text as="label" htmlFor="swiftBic" size="2" weight="bold">Swift/BIC</Text>
+              <TextField.Root 
+                id="swiftBic" 
+                value={invoiceData.swiftBic} 
+                onChange={(e) => onUpdateField?.('swiftBic', e.target.value)}
               />
             </Box>
             <Box>

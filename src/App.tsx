@@ -20,7 +20,7 @@ function App() {
   }, []); // Empty dependency array - only run once on mount
 
   const handleGenerate = async (preserveBankDetails: boolean = false) => {
-    const newData = generateFakeInvoice();
+    const newData = generateFakeInvoice(invoiceData.currency as 'GBP' | 'EUR' | 'USD');
     
     // Preserve contact information (client details)
     const updatedData = {
@@ -35,6 +35,8 @@ function App() {
       updatedData.sortCode = invoiceData.sortCode;
       updatedData.accountNumber = invoiceData.accountNumber;
       updatedData.accountName = invoiceData.accountName;
+      updatedData.iban = invoiceData.iban;
+      updatedData.swiftBic = invoiceData.swiftBic;
     }
     
     setInvoiceData(updatedData);
@@ -66,7 +68,8 @@ function App() {
       accountNumber: bankDetails.accountNumber || '', 
       accountName: bankDetails.accountName, 
       companyName: bankDetails.accountName,
-      iban: bankDetails.iban || ''
+      iban: bankDetails.iban || '',
+      swiftBic: bankDetails.swiftBic || ''
     };
     setInvoiceData(updatedData);
     

@@ -14,6 +14,7 @@ export interface InvoiceData {
   accountNumber: string;
   accountName: string;
   iban: string;
+  swiftBic: string;
   currency: string;
   items: InvoiceItem[];
 }
@@ -30,4 +31,5 @@ export interface BankDetailsUpdate {
   accountNumber?: string;
   accountName: string;
   iban?: string;
+  swiftBic?: string;
 }

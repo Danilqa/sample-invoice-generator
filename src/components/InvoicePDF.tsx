@@ -254,6 +254,19 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => {
                   <PDFText style={pdfStyles.bankDetailsValue}>{data.iban || ''}</PDFText>
                 </View>
               );
+            case 'USD':
+              return (
+                <>
+                  <View style={pdfStyles.bankDetailsRow}>
+                    <PDFText style={pdfStyles.bankDetailsLabel}>IBAN:</PDFText>
+                    <PDFText style={pdfStyles.bankDetailsValue}>{data.iban || ''}</PDFText>
+                  </View>
+                  <View style={pdfStyles.bankDetailsRow}>
+                    <PDFText style={pdfStyles.bankDetailsLabel}>Swift/BIC:</PDFText>
+                    <PDFText style={pdfStyles.bankDetailsValue}>{data.swiftBic || ''}</PDFText>
+                  </View>
+                </>
+              );
             case 'GBP':
             default:
               return (
