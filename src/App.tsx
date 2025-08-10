@@ -11,7 +11,12 @@ function App() {
 
   // Generate invoice on component mount
   useEffect(() => {
-    handleGenerate(false);
+    // Add a small delay to ensure component is fully mounted
+    const timer = setTimeout(() => {
+      handleGenerate(false);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []); // Empty dependency array - only run once on mount
 
   const handleGenerate = async (preserveBankDetails: boolean = false) => {
@@ -54,8 +59,15 @@ function App() {
     setPdfBlob(blob);
   };
 
-  const handleUpdateBankDetails = async (sortCode: string, accountNumber: string, accountName: string) => {
-    const updatedData = { ...invoiceData, sortCode, accountNumber, accountName, companyName: accountName };
+  const handleUpdateBankDetails = async (sortCode: string, accountNumber: string, accountName: string, iban?: string) => {
+    const updatedData = { 
+      ...invoiceData, 
+      sortCode, 
+      accountNumber, 
+      accountName, 
+      companyName: accountName,
+      iban: iban || ''
+    };
     setInvoiceData(updatedData);
     
     // Regenerate PDF blob with updated bank details

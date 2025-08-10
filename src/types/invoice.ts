@@ -13,6 +13,8 @@ export interface InvoiceData {
   sortCode: string;
   accountNumber: string;
   accountName: string;
+  iban: string;
+  currency: string;
   items: InvoiceItem[];
 }
 

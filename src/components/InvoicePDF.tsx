@@ -1,5 +1,6 @@
 import { Document, Page, Text as PDFText, View, StyleSheet } from '@react-pdf/renderer';
 import type { InvoiceData } from '../types/invoice';
+import { getCurrencyByCode } from '../utils/currencies';
 
 // PDF Styles
 const pdfStyles = StyleSheet.create({
@@ -138,7 +139,19 @@ interface InvoicePDFProps {
   data: InvoiceData;
 }
 
-export const InvoicePDF = ({ data }: InvoicePDFProps) => (
+export const InvoicePDF = ({ data }: InvoicePDFProps) => {
+  // Safety check to ensure data is properly initialized
+  if (!data || !data.items) {
+    return (
+      <Document>
+        <Page size="A4" style={pdfStyles.page}>
+          <PDFText>Loading...</PDFText>
+        </Page>
+      </Document>
+    );
+  }
+
+  return (
   <Document>
     <Page size="A4" style={pdfStyles.page}>
       {/* Header */}
@@ -172,48 +185,56 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
           <PDFText style={pdfStyles.col3}>Unit Price</PDFText>
           <PDFText style={pdfStyles.col4}>Total</PDFText>
         </View>
-        {data.items.map((item, index) => (
-          <View key={index} style={pdfStyles.row}>
-            <PDFText style={pdfStyles.col1}>{item.description}</PDFText>
-            <PDFText style={pdfStyles.col2}>{item.quantity === '' || item.quantity === 0 ? 1 : item.quantity}</PDFText>
-            <PDFText style={pdfStyles.col3}>£{(item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice).toFixed(2)}</PDFText>
-            <PDFText style={pdfStyles.col4}>£{item.total.toFixed(2)}</PDFText>
-          </View>
-        ))}
+        {data.items.map((item, index) => {
+          const currency = getCurrencyByCode(data.currency || 'GBP');
+          const symbol = currency?.symbol || '£';
+          return (
+            <View key={index} style={pdfStyles.row}>
+              <PDFText style={pdfStyles.col1}>{item.description}</PDFText>
+              <PDFText style={pdfStyles.col2}>{item.quantity === '' || item.quantity === 0 ? 1 : item.quantity}</PDFText>
+              <PDFText style={pdfStyles.col3}>{symbol}{(item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice).toFixed(2)}</PDFText>
+              <PDFText style={pdfStyles.col4}>{symbol}{item.total.toFixed(2)}</PDFText>
+            </View>
+          );
+        })}
       </View>
 
       {/* Totals */}
       <View style={pdfStyles.totalSection}>
-        <View style={pdfStyles.totalRow}>
-          <PDFText style={pdfStyles.totalLabel}>Subtotal:</PDFText>
-          <PDFText style={pdfStyles.totalValue}>
-            £{data.items.reduce((sum, item) => {
-              const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
-              const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
-              return sum + (quantity * unitPrice);
-            }, 0).toFixed(2)}
-          </PDFText>
-        </View>
-        <View style={pdfStyles.totalRow}>
-          <PDFText style={pdfStyles.totalLabel}>VAT (20%):</PDFText>
-          <PDFText style={pdfStyles.totalValue}>
-            £{(data.items.reduce((sum, item) => {
-              const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
-              const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
-              return sum + (quantity * unitPrice);
-            }, 0) * 0.2).toFixed(2)}
-          </PDFText>
-        </View>
-        <View style={pdfStyles.totalRow}>
-          <PDFText style={pdfStyles.totalLabel}>Total:</PDFText>
-          <PDFText style={pdfStyles.totalValue}>
-            £{(data.items.reduce((sum, item) => {
-              const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
-              const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
-              return sum + (quantity * unitPrice);
-            }, 0) * 1.2).toFixed(2)}
-          </PDFText>
-        </View>
+        {(() => {
+          const currency = getCurrencyByCode(data.currency || 'GBP');
+          const symbol = currency?.symbol || '£';
+          const subtotal = data.items.reduce((sum, item) => {
+            const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
+            const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
+            return sum + (quantity * unitPrice);
+          }, 0);
+          const vat = subtotal * 0.2;
+          const total = subtotal + vat;
+          
+          return (
+            <>
+              <View style={pdfStyles.totalRow}>
+                <PDFText style={pdfStyles.totalLabel}>Subtotal:</PDFText>
+                <PDFText style={pdfStyles.totalValue}>
+                  {symbol}{subtotal.toFixed(2)}
+                </PDFText>
+              </View>
+              <View style={pdfStyles.totalRow}>
+                <PDFText style={pdfStyles.totalLabel}>VAT (20%):</PDFText>
+                <PDFText style={pdfStyles.totalValue}>
+                  {symbol}{vat.toFixed(2)}
+                </PDFText>
+              </View>
+              <View style={pdfStyles.totalRow}>
+                <PDFText style={pdfStyles.totalLabel}>Total:</PDFText>
+                <PDFText style={pdfStyles.totalValue}>
+                  {symbol}{total.toFixed(2)}
+                </PDFText>
+              </View>
+            </>
+          );
+        })()}
       </View>
 
       {/* Standard UK Bill Bank Details Section */}
@@ -221,16 +242,34 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
         <PDFText style={pdfStyles.bankDetailsTitle}>BANK DETAILS</PDFText>
         <View style={pdfStyles.bankDetailsRow}>
           <PDFText style={pdfStyles.bankDetailsLabel}>Account Name:</PDFText>
-          <PDFText style={pdfStyles.bankDetailsValue}>{data.accountName}</PDFText>
+          <PDFText style={pdfStyles.bankDetailsValue}>{data.accountName || ''}</PDFText>
         </View>
-        <View style={pdfStyles.bankDetailsRow}>
-          <PDFText style={pdfStyles.bankDetailsLabel}>Sort Code:</PDFText>
-          <PDFText style={pdfStyles.bankDetailsValue}>{data.sortCode}</PDFText>
-        </View>
-        <View style={pdfStyles.bankDetailsRow}>
-          <PDFText style={pdfStyles.bankDetailsLabel}>Account Number:</PDFText>
-          <PDFText style={pdfStyles.bankDetailsValue}>{data.accountNumber}</PDFText>
-        </View>
+        {(() => {
+          const currency = data.currency || 'GBP';
+          switch (currency) {
+            case 'EUR':
+              return (
+                <View style={pdfStyles.bankDetailsRow}>
+                  <PDFText style={pdfStyles.bankDetailsLabel}>IBAN:</PDFText>
+                  <PDFText style={pdfStyles.bankDetailsValue}>{data.iban || ''}</PDFText>
+                </View>
+              );
+            case 'GBP':
+            default:
+              return (
+                <>
+                  <View style={pdfStyles.bankDetailsRow}>
+                    <PDFText style={pdfStyles.bankDetailsLabel}>Sort Code:</PDFText>
+                    <PDFText style={pdfStyles.bankDetailsValue}>{data.sortCode || ''}</PDFText>
+                  </View>
+                  <View style={pdfStyles.bankDetailsRow}>
+                    <PDFText style={pdfStyles.bankDetailsLabel}>Account Number:</PDFText>
+                    <PDFText style={pdfStyles.bankDetailsValue}>{data.accountNumber || ''}</PDFText>
+                  </View>
+                </>
+              );
+          }
+        })()}
         <View style={pdfStyles.bankDetailsRow}>
           <PDFText style={pdfStyles.bankDetailsLabel}>Reference:</PDFText>
           <PDFText style={pdfStyles.bankDetailsValue}>{data.invoiceNumber}</PDFText>
@@ -250,4 +289,5 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
       </View>
     </Page>
   </Document>
-);
+  );
+};
