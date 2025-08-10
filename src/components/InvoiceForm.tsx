@@ -175,13 +175,13 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
         <Separator />
 
         <Card style={{ padding: '10px' }}>
-          <Flex 
-            direction="column" 
-            gap="3"
-            style={{ cursor: 'pointer' }}
-            onClick={() => setIsItemsExpanded(!isItemsExpanded)}
-          >
-            <Flex justify="between" align="center">
+          <Flex direction="column" gap="3">
+            <Flex 
+              justify="between" 
+              align="center"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setIsItemsExpanded(!isItemsExpanded)}
+            >
               <Text size="4" weight="bold">📦 Invoice Items</Text>
               <Text size="3" style={{ transform: isItemsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
                 ▼
