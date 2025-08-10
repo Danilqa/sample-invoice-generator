@@ -175,8 +175,8 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
         {data.items.map((item, index) => (
           <View key={index} style={pdfStyles.row}>
             <PDFText style={pdfStyles.col1}>{item.description}</PDFText>
-            <PDFText style={pdfStyles.col2}>{item.quantity}</PDFText>
-            <PDFText style={pdfStyles.col3}>£{item.unitPrice.toFixed(2)}</PDFText>
+            <PDFText style={pdfStyles.col2}>{item.quantity === '' || item.quantity === 0 ? 1 : item.quantity}</PDFText>
+            <PDFText style={pdfStyles.col3}>£{(item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice).toFixed(2)}</PDFText>
             <PDFText style={pdfStyles.col4}>£{item.total.toFixed(2)}</PDFText>
           </View>
         ))}
@@ -187,19 +187,31 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => (
         <View style={pdfStyles.totalRow}>
           <PDFText style={pdfStyles.totalLabel}>Subtotal:</PDFText>
           <PDFText style={pdfStyles.totalValue}>
-            £{data.items.reduce((sum, item) => sum + item.total, 0).toFixed(2)}
+            £{data.items.reduce((sum, item) => {
+              const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
+              const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
+              return sum + (quantity * unitPrice);
+            }, 0).toFixed(2)}
           </PDFText>
         </View>
         <View style={pdfStyles.totalRow}>
           <PDFText style={pdfStyles.totalLabel}>VAT (20%):</PDFText>
           <PDFText style={pdfStyles.totalValue}>
-            £{(data.items.reduce((sum, item) => sum + item.total, 0) * 0.2).toFixed(2)}
+            £{(data.items.reduce((sum, item) => {
+              const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
+              const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
+              return sum + (quantity * unitPrice);
+            }, 0) * 0.2).toFixed(2)}
           </PDFText>
         </View>
         <View style={pdfStyles.totalRow}>
           <PDFText style={pdfStyles.totalLabel}>Total:</PDFText>
           <PDFText style={pdfStyles.totalValue}>
-            £{(data.items.reduce((sum, item) => sum + item.total, 0) * 1.2).toFixed(2)}
+            £{(data.items.reduce((sum, item) => {
+              const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
+              const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
+              return sum + (quantity * unitPrice);
+            }, 0) * 1.2).toFixed(2)}
           </PDFText>
         </View>
       </View>

@@ -3,7 +3,6 @@ import { InvoicePDF } from '../components/InvoicePDF';
 import type { InvoiceData } from '../types/invoice';
 
 export const generatePDFBlob = async (invoiceData: InvoiceData): Promise<Blob> => {
-  console.log('generate', { invoiceData })
   return await pdf(<InvoicePDF data={invoiceData} />).toBlob();
 };
 

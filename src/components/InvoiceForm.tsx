@@ -37,12 +37,29 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...items];
-    newItems[index] = { ...newItems[index], [field]: value };
+    
+    // Handle quantity and unitPrice fields specially to allow empty values
+    if (field === 'quantity' || field === 'unitPrice') {
+      // If the value is empty string, store it as empty string
+      if (value === '') {
+        newItems[index] = { ...newItems[index], [field]: '' };
+      } else {
+        // Convert to number for calculations
+        const numValue = Number(value);
+        newItems[index] = { ...newItems[index], [field]: numValue };
+      }
+    } else {
+      newItems[index] = { ...newItems[index], [field]: value };
+    }
 
     // Recalculate total
     if (field === 'quantity' || field === 'unitPrice') {
-      const quantity = field === 'quantity' ? Number(value) : newItems[index].quantity;
-      const unitPrice = field === 'unitPrice' ? Number(value) : newItems[index].unitPrice;
+      const quantity = field === 'quantity' 
+        ? (value === '' ? 0 : Number(value)) 
+        : (newItems[index].quantity === '' ? 0 : Number(newItems[index].quantity));
+      const unitPrice = field === 'unitPrice' 
+        ? (value === '' ? 0 : Number(value)) 
+        : (newItems[index].unitPrice === '' ? 0 : Number(newItems[index].unitPrice));
       newItems[index].total = quantity * unitPrice;
     }
 
@@ -62,14 +79,16 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     } else {
       const selectedDetails = charityBankDetails.find(bank => bank.name === value);
       if (selectedDetails) {
-        console.log('called?')
-        console.log({ selectedDetails, value })
         onUpdateBankDetails?.(selectedDetails.sortCode, selectedDetails.accountNumber, selectedDetails.name);
       }
     }
   };
 
-  const totalAmount = items.reduce((sum, item) => sum + item.total, 0);
+  const totalAmount = items.reduce((sum, item) => {
+    const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
+    const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
+    return sum + (quantity * unitPrice);
+  }, 0);
 
   return (
     <Card style={{ flex: 1, padding: '20px', overflow: 'auto' }}>
@@ -235,8 +254,8 @@ const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
           size="1"
           type="number"
           value={item.quantity}
-          onChange={(e) => onUpdate('quantity', Number(e.target.value))}
-          min="1"
+          onChange={(e) => onUpdate('quantity', e.target.value)}
+          placeholder="1"
         />
       </Box>
       <Box>
@@ -245,14 +264,17 @@ const InvoiceItemCard = ({ item, onUpdate }: InvoiceItemCardProps) => (
           size="1"
           type="number"
           value={item.unitPrice}
-          onChange={(e) => onUpdate('unitPrice', Number(e.target.value))}
-          min="0"
-          step="0.01"
+          onChange={(e) => onUpdate('unitPrice', e.target.value)}
+          placeholder="0.00"
         />
       </Box>
       <Box >
         <Text size="2" weight="bold">Total</Text><br/>
-        <Text size="1" weight="medium">£{item.total.toFixed(2)}</Text>
+        <Text size="1" weight="medium">£{(() => {
+          const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
+          const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
+          return (quantity * unitPrice).toFixed(2);
+        })()}</Text>
       </Box >
     </Grid>
   </Card>

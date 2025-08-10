@@ -18,7 +18,7 @@ export interface InvoiceData {
 
 export interface InvoiceItem {
   description: string;
-  quantity: number;
-  unitPrice: number;
+  quantity: number | '';
+  unitPrice: number | '';
   total: number;
 }
