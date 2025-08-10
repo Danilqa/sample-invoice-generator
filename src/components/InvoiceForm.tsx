@@ -226,48 +226,46 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Separator />
 
-        <Text size="4" weight="bold">💱 Currency</Text>
-        <Box>
-          <Flex direction="column" gap="2">
-            <Text as="label" htmlFor="currency" size="2" weight="bold">Select Currency</Text>
-            <Select.Root 
-              value={invoiceData.currency} 
-              onValueChange={(value) => onUpdateField?.('currency', value)}
-            >
-              <Select.Trigger placeholder="Choose currency..." />
-              <Select.Content>
-                {currencies.map((currency) => (
-                  <Select.Item key={currency.code} value={currency.code}>
-                    {currency.flag} {currency.name} ({currency.symbol})
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Root>
-          </Flex>
-        </Box>
-
-        <Separator />
-
         <Text size="4" weight="bold">🏦 Bank Details</Text>
-        <Box>
-          <Flex direction="column" gap="2">
-              <Text as="label" htmlFor="bankDetails" size="2" weight="bold">Select Bank Details</Text>
-              <Select.Root value={selectedBankDetails} onValueChange={handleBankDetailsChange}>
-                <Select.Trigger placeholder="Choose bank details..." />
+        <Grid gap="3" columns="70px 1fr">
+          <Box>
+            <Flex direction="column" gap="2">
+              <Text as="label" htmlFor="currency" size="2" weight="bold">Currency</Text>
+              <Select.Root
+                value={invoiceData.currency} 
+                onValueChange={(value) => onUpdateField?.('currency', value)}
+              >
+                <Select.Trigger placeholder="Choose currency..." />
                 <Select.Content>
-                  {currentBankDetails.map((bank) => (
-                    <Select.Item key={bank.name} value={bank.name}>
-                      {bank.name} - {bank.currency === 'EUR' ? bank.iban : `${bank.sortCode} / ${bank.accountNumber}`}
+                  {currencies.map((currency) => (
+                    <Select.Item key={currency.code} value={currency.code}>
+                      {currency.flag}
                     </Select.Item>
                   ))}
-                  <Select.Item value="random">Generate random invalid</Select.Item>
                 </Select.Content>
               </Select.Root>
-              <Text size="1" color="gray">
-                  Real charity bank details from public sources.
-              </Text>
-          </Flex>
-        </Box>
+            </Flex>
+          </Box>
+          <Box>
+            <Flex direction="column" gap="2">
+                <Text as="label" htmlFor="bankDetails" size="2" weight="bold">Select Bank Details</Text>
+                <Select.Root value={selectedBankDetails} onValueChange={handleBankDetailsChange}>
+                  <Select.Trigger placeholder="Choose bank details..." />
+                  <Select.Content>
+                    {currentBankDetails.map((details) => (
+                      <Select.Item key={details.name} value={details.name}>
+                        {details.name}
+                      </Select.Item>
+                    ))}
+                    <Select.Item value="random">Generate random invalid</Select.Item>
+                  </Select.Content>
+                </Select.Root>
+                <Text size="1" color="gray">
+                    Real charity bank details from public sources.
+                </Text>
+            </Flex>
+          </Box>
+        </Grid>
 
         {isEURCurrency(invoiceData.currency) ? (
           <Grid columns={{ initial: "1", sm: "2" }} gap="3">
