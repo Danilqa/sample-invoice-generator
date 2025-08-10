@@ -14,7 +14,7 @@
 }
 
 /* Mobile responsive styles */
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .pdf-viewer {
     min-height: 100vh;
   }
