@@ -56,7 +56,6 @@ function App() {
 
   const handleUpdateBankDetails = async (sortCode: string, accountNumber: string, accountName: string) => {
     const updatedData = { ...invoiceData, sortCode, accountNumber, accountName, companyName: accountName };
-    console.log({ updatedData })
     setInvoiceData(updatedData);
     
     // Regenerate PDF blob with updated bank details
@@ -75,13 +74,17 @@ function App() {
 
   return (
     <Theme>
-      <Container size="4" style={{ height: '100%', padding: '20px' }}>
+      <Container size="4" style={{ height: '100%', padding: '20px', paddingBottom: 0 }}>
         <Box mb="4">
           <Text size="6" weight="bold">📄 Sample Invoice Generator</Text>
           <br/>
           <Text size="1">For development and testing purposes only.</Text>
         </Box>
-        <Flex direction="row" gap="4" style={{ height: '100%' }}>
+        <Flex 
+          direction={{ initial: 'column', md: 'row' }} 
+          gap="4" 
+          style={{ height: '100%' }}
+        >
           <InvoiceForm 
             invoiceData={invoiceData}
             onGenerate={handleGenerate}

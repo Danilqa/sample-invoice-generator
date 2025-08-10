@@ -25,18 +25,6 @@ body {
   overflow: hidden;
 }
 
-.pdf-viewer-container {
-  height: 100%;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.form-section {
-  overflow-y: auto;
-  max-height: 100%;
-}
-
 /* Ensure PDF viewer takes full height */
 .react-pdf__Page {
   margin: 0;
@@ -45,23 +33,4 @@ body {
 .react-pdf__Page__canvas {
   display: block;
   margin: 0 auto;
-}
-
-/* Custom scrollbar for better UX */
-.form-section::-webkit-scrollbar {
-  width: 6px;
-}
-
-.form-section::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.form-section::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.form-section::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
 }

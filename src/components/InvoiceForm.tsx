@@ -74,7 +74,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
   return (
     <Card style={{ flex: 1, padding: '20px', overflow: 'auto' }}>
       <Flex direction="column" gap="4">
-        <Flex direction="row" gap="3">
+        <Flex direction={{ initial: 'column', sm: 'row' }} gap="3">
           <Button size="3" variant="soft" color="blue" onClick={() => onGenerate(true)}>
             Regenerate data
           </Button>
@@ -87,7 +87,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
         <Separator />
 
         <Text size="4" weight="bold">📋 Invoice Details</Text>
-        <Grid columns="2" gap="3">
+        <Grid columns={{ initial: "1", sm: "2" }} gap="3">
           <Box>
             <Text as="label" htmlFor="invoiceNumber" size="2" weight="bold">Invoice Number</Text>
             <TextField.Root 
@@ -145,7 +145,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
           </Flex>
         </Box>
 
-        <Grid columns="3" gap="3">
+        <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3">
           <Box>
             <Text as="label" htmlFor="sortCode" size="2" weight="bold">Sort Code</Text>
             <TextField.Root 
