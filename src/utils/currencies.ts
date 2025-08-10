@@ -17,6 +17,12 @@ export const currencies: Currency[] = [
     name: 'Euro',
     symbol: '€',
     flag: '🇪🇺'
+  },
+  {
+    code: 'USD',
+    name: 'US Dollar',
+    symbol: '$',
+    flag: '🇺🇸'
   }
 ];
 

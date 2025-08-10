@@ -5,7 +5,8 @@ export interface BankDetails {
   sortCode?: string;
   accountNumber?: string;
   iban?: string;
-  currency: 'GBP' | 'EUR';
+  swiftBic?: string;
+  currency: 'GBP' | 'EUR' | 'USD';
 }
 
 export const gbpBankDetails: BankDetails[] = [
@@ -116,18 +117,74 @@ export const eurBankDetails: BankDetails[] = [
   }
 ];
 
-export const getBankDetailsByCurrency = (currency: 'GBP' | 'EUR'): BankDetails[] => {
+export const usdBankDetails: BankDetails[] = [
+  {
+    name: "International Committee of the Red Cross",
+    iban: "CH5200240240C01299864",
+    swiftBic: "UBSWCHZH80A",
+    currency: "USD"
+  },
+  {
+    name: "Islamic Relief",
+    iban: "GB93BARC20077157422611",
+    swiftBic: "BARCGB22",
+    currency: "USD"
+  },
+  {
+    name: "ShelterBox",
+    iban: "GB42NWBK60730157078416",
+    swiftBic: "NWBKGB2L",
+    currency: "USD"
+  },
+  {
+    name: "Palestine Red Crescent Society",
+    iban: "PS18PALS047106073770013000000",
+    swiftBic: "CITIUS33",
+    currency: "USD"
+  }
+];
+
+export const getBankDetailsByCurrency = (currency: 'GBP' | 'EUR' | 'USD'): BankDetails[] => {
   switch (currency) {
     case 'EUR':
       return eurBankDetails;
+    case 'USD':
+      return usdBankDetails;
     case 'GBP':
     default:
       return gbpBankDetails;
   }
 };
 
-export const generateRandomInvalidBankDetails = (currency: 'GBP' | 'EUR' = 'GBP'): BankDetails => {
+export const generateRandomInvalidBankDetails = (currency: 'GBP' | 'EUR' | 'USD' = 'GBP'): BankDetails => {
   switch (currency) {
+    case 'USD': {
+      // Generate random IBAN and Swift/BIC for USD
+      const countryCode = ['US', 'GB', 'CH', 'DE'][Math.floor(Math.random() * 4)];
+      const checkDigits = Math.floor(Math.random() * 99).toString().padStart(2, '0');
+      const bankCode = Math.floor(Math.random() * 99999999).toString().padStart(8, '0');
+      const accountNumber = Math.floor(Math.random() * 9999999999).toString().padStart(10, '0');
+      
+      const randomIBAN = `${countryCode}${checkDigits} ${bankCode} ${accountNumber}`;
+      
+      // Generate random Swift/BIC (4 letters bank code + 2 letters country + 2 letters/numbers location)
+      const bankLetters = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                         String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                         String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                         String.fromCharCode(65 + Math.floor(Math.random() * 26));
+      const countryLetters = ['US', 'GB', 'CH', 'DE'][Math.floor(Math.random() * 4)];
+      const locationCode = String.fromCharCode(65 + Math.floor(Math.random() * 26)) + 
+                          (Math.random() > 0.5 ? String.fromCharCode(65 + Math.floor(Math.random() * 26)) : Math.floor(Math.random() * 10));
+      
+      const randomSwiftBic = bankLetters + countryLetters + locationCode;
+      
+      return {
+        name: faker.company.name(),
+        iban: randomIBAN,
+        swiftBic: randomSwiftBic,
+        currency: 'USD'
+      };
+    }
     case 'EUR': {
       // Generate random IBAN for EUR with more realistic format
       const countryCode = ['DE', 'FR', 'BE', 'NL', 'AT', 'IT', 'ES'][Math.floor(Math.random() * 7)];
