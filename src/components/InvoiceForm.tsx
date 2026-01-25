@@ -1,4 +1,5 @@
 import { Flex, Card, Text, Button, TextField, Separator, Grid, Box, Select } from '@radix-ui/themes';
+import { ChevronDownIcon, FileTextIcon, IdCardIcon, CubeIcon } from '@radix-ui/react-icons';
 import { useState, useEffect } from 'react';
 import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from '../types/invoice';
 import { getBankDetailsByCurrency, generateRandomInvalidBankDetails } from '../utils/bankDetails';
@@ -220,7 +221,10 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Separator />
 
-        <Text size="4" weight="bold">📋 Invoice Details</Text>
+        <Flex align="center" gap="2">
+          <FileTextIcon width="18" height="18" />
+          <Text size="4" weight="bold">Invoice Details</Text>
+        </Flex>
         <Grid columns={{ initial: "1", sm: "2" }} gap="3">
           <Box>
             <Text as="label" htmlFor="invoiceNumber" size="2" weight="bold">Invoice Number</Text>
@@ -258,7 +262,10 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
 
         <Separator />
 
-        <Text size="4" weight="bold">🏦 Bank Details</Text>
+        <Flex align="center" gap="2">
+          <IdCardIcon width="18" height="18" />
+          <Text size="4" weight="bold">Bank Details</Text>
+        </Flex>
         <Grid gap="3" columns="70px 1fr">
           <Box>
             <Flex direction="column" gap="2">
@@ -384,10 +391,15 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
               style={{ cursor: 'pointer' }}
               onClick={() => setIsItemsExpanded(!isItemsExpanded)}
             >
-              <Text size="4" weight="bold">📦 Invoice Items</Text>
-              <Text size="3" style={{ transform: isItemsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
-                ▼
-              </Text>
+              <Flex align="center" gap="2">
+                <CubeIcon width="18" height="18" />
+                <Text size="4" weight="bold">Invoice Items</Text>
+              </Flex>
+              <ChevronDownIcon 
+                width="20" 
+                height="20" 
+                style={{ transform: isItemsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} 
+              />
             </Flex>
             
             {isItemsExpanded && (
