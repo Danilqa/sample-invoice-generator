@@ -1,9 +1,10 @@
-import { Flex, Card, Text, Button, TextField, Separator, Grid, Box, Select } from '@radix-ui/themes';
+import { Flex, Card, Text, Button, TextField, Separator, Grid, Box, Select, Kbd } from '@radix-ui/themes';
 import { ChevronDownIcon, FileTextIcon, IdCardIcon, CubeIcon } from '@radix-ui/react-icons';
 import { useState, useEffect } from 'react';
 import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from '../types/invoice';
 import { getBankDetailsByCurrency, generateRandomInvalidBankDetails } from '../utils/bankDetails';
 import { currencies, getCurrencyByCode } from '../utils/currencies';
+import { useHotkey } from '../hooks/useHotkey';
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
@@ -19,6 +20,10 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [selectedBankDetails, setSelectedBankDetails] = useState<string>('');
   const [isItemsExpanded, setIsItemsExpanded] = useState<boolean>(false);
+
+  // Keyboard shortcuts
+  useHotkey('r', () => onGenerate(true));
+  useHotkey('d', () => onDownload(), !!pdfBlob);
 
   // Helper function to handle currency-specific logic
   const handleCurrencySpecificLogic = (currency: string, callback: (type: 'GBP' | 'EUR' | 'USD') => void) => {
@@ -211,11 +216,11 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
       <Flex direction="column" gap="4">
         <Flex direction={{ initial: 'column', sm: 'row' }} gap="3">
           <Button size="3" variant="soft" color="blue" onClick={() => onGenerate(true)}>
-            Regenerate data
+            Regenerate data <Kbd>R</Kbd>
           </Button>
 
           <Button size="3" variant="soft" color="pink" onClick={onDownload} disabled={!pdfBlob}>
-            Download PDF
+            Download PDF <Kbd>D</Kbd>
           </Button>
         </Flex>
 
