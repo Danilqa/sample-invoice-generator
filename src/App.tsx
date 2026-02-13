@@ -145,7 +145,7 @@ function App() {
       <Container size="4" style={{ height: '100%', padding: '20px', paddingBottom: 0 }}>
         <Flex justify="between" align="start" mb="4">
           <Flex align="center" gap="3">
-            <img src="/logo.png" alt="Logo" style={{ width: 40, height: 40 }} />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Logo" style={{ width: 40, height: 40 }} />
             <Box>
               <Text size="6" weight="bold">Dummy Invoice Generator</Text>
               <br/>
