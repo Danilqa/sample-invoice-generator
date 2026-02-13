@@ -79,6 +79,17 @@ body {
   overflow: hidden;
 }
 
+/* Pointer cursor on interactive elements */
+.radix-themes {
+  --cursor-button: pointer;
+  --cursor-checkbox: pointer;
+  --cursor-menu-item: pointer;
+  --cursor-radio: pointer;
+  --cursor-slider-thumb: pointer;
+  --cursor-slider-thumb-active: grabbing;
+  --cursor-switch: pointer;
+}
+
 /* Ensure PDF viewer takes full height */
 .react-pdf__Page {
   margin: 0;
