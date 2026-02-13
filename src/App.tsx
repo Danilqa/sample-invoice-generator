@@ -25,6 +25,13 @@ function getStoredTheme(): ThemePreference {
   return 'system';
 }
 
+function getBannerDismissed(): boolean {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('banner-dismissed') === 'true';
+  }
+  return false;
+}
+
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>(generateFakeInvoice());
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
@@ -32,6 +39,7 @@ function App() {
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
     themePreference === 'system' ? getSystemTheme() : themePreference
   );
+  const [bannerDismissed, setBannerDismissed] = useState(getBannerDismissed);
 
   // Handle theme changes
   useEffect(() => {
@@ -133,14 +141,20 @@ function App() {
   return (
     <Theme appearance={resolvedTheme}>
       {/* GitHub Star Banner */}
-      <a 
-        href="https://github.com/Danilqa/sample-invoice-generator" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="github-star-banner"
-      >
-        ⭐️ Support this app by giving it a star on Github
-      </a>
+      {!bannerDismissed && (
+        <a 
+          href="https://github.com/Danilqa/sample-invoice-generator" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="github-star-banner"
+          onClick={() => {
+            localStorage.setItem('banner-dismissed', 'true');
+            setBannerDismissed(true);
+          }}
+        >
+          ⭐️ Support this app by giving it a star on Github
+        </a>
+      )}
       
       <Container size="4" style={{ height: '100%', padding: '20px', paddingBottom: 0 }}>
         <Flex justify="between" align="start" mb="4">
