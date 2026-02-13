@@ -145,7 +145,7 @@ function App() {
       <Container size="4" style={{ height: '100%', padding: '20px', paddingBottom: 0 }}>
         <Flex justify="between" align="start" mb="4">
           <Box>
-            <Text size="6" weight="bold">Sample Invoice Generator</Text>
+            <Text size="6" weight="bold">Dummy Invoice Generator</Text>
             <br/>
             <Text size="1">For development and testing purposes only.</Text>
           </Box>
