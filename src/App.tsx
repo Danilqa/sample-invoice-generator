@@ -139,7 +139,7 @@ function App() {
         rel="noopener noreferrer"
         className="github-star-banner"
       >
-        ⭐️ Support the project by giving it a star on Github
+        ⭐️ Support this app by giving it a star on Github
       </a>
       
       <Container size="4" style={{ height: '100%', padding: '20px', paddingBottom: 0 }}>
