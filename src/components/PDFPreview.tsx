@@ -1,17 +1,65 @@
-import { useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { PDFViewer } from '@react-pdf/renderer';
 import { ArrowUpRight } from 'lucide-react';
 import { InvoicePDF } from './InvoicePDF';
 import { Button } from '@/components/ui/button';
 import type { InvoiceData } from '../types/invoice';
 
+// One object URL per PDF, kept while the app is open (the browser releases them all when it closes),
+// so a tab opened from here can still be reloaded later
+const pdfUrls = new WeakMap<Blob, string>();
+
 // Opens the same blob the Download button saves, in the browser's full PDF viewer
 const openPDFInNewTab = (pdfBlob: Blob) => {
-  const url = URL.createObjectURL(pdfBlob);
+  let url = pdfUrls.get(pdfBlob);
+  if (!url) {
+    url = URL.createObjectURL(pdfBlob);
+    pdfUrls.set(pdfBlob, url);
+  }
   window.open(url, '_blank');
-  // Give the new tab time to load the blob before releasing it
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+};
+
+// How long after a Tab keypress focus may take to arrive in the viewer (it's handed over between processes;
+// a few milliseconds in practice)
+const TAB_FOCUS_WINDOW_MS = 1000;
+
+// Whether keyboard focus is inside the iframe in `ref`'s element. Used for the PDF viewer: once it has focus
+// the arrow keys scroll the page, but Chrome never matches :focus, :focus-visible or :focus-within for it,
+// so CSS can't draw its focus ring. Only Tab turns this on; clicking into the viewer doesn't.
+const useKeyboardFocusInFrame = (ref: RefObject<HTMLElement | null>) => {
+  const [hasFocus, setHasFocus] = useState(false);
+
+  useEffect(() => {
+    let lastTabAt = -Infinity;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Tab') lastTabAt = event.timeStamp;
+    };
+    // The page's window blurs when focus moves into the iframe, by Tab or by a click inside it
+    const handleWindowBlur = (event: FocusEvent) => {
+      const viaTab = event.timeStamp - lastTabAt < TAB_FOCUS_WINDOW_MS;
+      lastTabAt = -Infinity;
+      if (viaTab && ref.current?.contains(document.activeElement)) setHasFocus(true);
+    };
+    // Focus coming back to the page (Tab out of the viewer, or a click elsewhere), or landing on a page element
+    const handleFocusBack = () => {
+      lastTabAt = -Infinity;
+      if (!ref.current?.contains(document.activeElement)) setHasFocus(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleFocusBack);
+    document.addEventListener('focusin', handleFocusBack);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleFocusBack);
+      document.removeEventListener('focusin', handleFocusBack);
+    };
+  }, [ref]);
+
+  return hasFocus;
 };
 
 // On phones the preview sits below the whole form, so the PDF viewer waits until it scrolls near.
@@ -29,6 +77,11 @@ interface PDFPreviewProps {
 export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) => {
   const sheetRef = useRef<HTMLDivElement>(null);
   const [isNearViewport, setIsNearViewport] = useState(shouldMountEagerly);
+  const hasKeyboardFocus = useKeyboardFocusInFrame(sheetRef);
+
+  // PDFViewer renders the PDF again (and reloads its iframe, dropping focus) whenever it gets a new
+  // document element, so only make one when the invoice data changes, not on every render
+  const pdfDocument = useMemo(() => <InvoicePDF data={invoiceData} />, [invoiceData]);
 
   useEffect(() => {
     const sheet = sheetRef.current;
@@ -88,17 +141,20 @@ export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) =
 
       <div
         ref={sheetRef}
-        className="relative mt-5 aspect-[210/297] w-full overflow-hidden rounded-[10px] bg-white shadow-sheet lg:aspect-auto lg:min-h-0 lg:flex-1"
+        data-keyboard-focus={hasKeyboardFocus || undefined}
+        className="relative mt-5 aspect-[210/297] w-full overflow-hidden rounded-[10px] bg-white shadow-sheet data-keyboard-focus:outline-2 data-keyboard-focus:outline-offset-4 lg:aspect-auto lg:min-h-0 lg:flex-1"
       >
-        {/* The viewer is overscanned by a few pixels to hide its grey page margin, so the page reads as one white sheet */}
+        {/* The viewer is overscanned to hide the dark margin it draws around the page, so the page reads as
+            one white sheet even when scrolled to its end: 5px is cut off at the top, left and right, and 8px
+            at the bottom (the margin below the page is 7px at full size) */}
         {pdfBlob && isNearViewport ? (
           <PDFViewer
             key={pdfKey}
             showToolbar={false}
-            className="absolute -top-[5px] -left-[5px] block h-[calc(100%+5px)] w-[calc(100%+10px)] max-w-none border-0"
+            className="absolute -top-[5px] -left-[5px] block h-[calc(100%+13px)] w-[calc(100%+10px)] max-w-none border-0"
             innerRef={(frame) => frame?.setAttribute('title', 'Invoice PDF preview')}
           >
-            <InvoicePDF data={invoiceData} />
+            {pdfDocument}
           </PDFViewer>
         ) : (
           <SheetPlaceholder />

@@ -58,6 +58,18 @@
   --radius-xl: calc(var(--radius) * 1.4);
 }
 
+/* Form column widths (its @container, inside the padding) where a row of fields fits side by side.
+   Narrower columns (phones, and the side-by-side desktop layout on smaller laptops) stack the fields
+   instead of cutting values off. */
+@theme {
+  /* GBP sort code (6rem) + account number (6.5rem) + two gaps leave the account name at least 232px,
+     enough for the default "British Heart Foundation (BHF)"; USD's IBAN keeps 276px next to Swift/BIC */
+  --container-bank-row: 28.5rem;
+  /* Qty + unit price + amount take 268px, leaving the description at least 252px:
+     the longest generated product name ("Handcrafted Aluminum Computer") needs 248px */
+  --container-item-row: 32.5rem;
+}
+
 /* Black-and-white palette: neutral greys only, no accent hue */
 :root {
   --radius: 0.625rem;

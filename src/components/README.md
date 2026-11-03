@@ -22,6 +22,7 @@ short-screen density variables live in `src/index.css`.
   - Subtotal, VAT and the total incl. VAT, with the same digits as the PDF
   - R and D keyboard shortcuts (ignored while typing)
   - On desktop the form scrolls on its own and the actions sit in a bar pinned below it
+  - Rows of fields (GBP and USD bank details, line items) stack when the column is too narrow for their values
 
 ### `PDFPreview.tsx`
 - **Purpose**: The live PDF preview under a "Preview" tab row
@@ -31,6 +32,7 @@ short-screen density variables live in `src/index.css`.
   - `actions`: Optional extra controls at the right end of the tab row
 - **Features**:
   - Shows the PDF as a white sheet and offers to open it in a new tab
+  - The sheet gets a focus ring while the viewer has keyboard focus (the arrow keys then scroll the page)
   - On phones the viewer mounts only when the sheet scrolls near the screen
 
 ### `InvoicePDF.tsx`

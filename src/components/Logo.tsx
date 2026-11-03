@@ -1,8 +1,8 @@
 import { useId } from 'react';
 import type { SVGProps } from 'react';
 
-// Inline copy of public/logo.svg that follows the text colour (and so dark mode):
-// a coin with a torn-off receipt cut out of it
+// The logo mark (as in public/favicon.svg) in the text colour, so it follows dark mode:
+// a coin with a torn-off receipt cut out of it. public/logo.svg is the same mark on a black app-icon tile.
 export const Logo = (props: SVGProps<SVGSVGElement>) => {
   // useId output can contain characters that are awkward inside url(#...)
   const maskId = `logo-receipt-${useId().replace(/[^\w-]/g, '')}`;

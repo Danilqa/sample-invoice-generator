@@ -2,13 +2,6 @@ import { useEffect, useState } from 'react';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
-function getSystemTheme(): 'light' | 'dark' {
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-  return 'light';
-}
-
 function getStoredTheme(): ThemePreference {
   if (typeof window !== 'undefined') {
     const stored = localStorage.getItem('theme-preference');
@@ -23,31 +16,23 @@ function getStoredTheme(): ThemePreference {
 // index.html applies the same class before first paint, so there is no light/dark flash.
 export function useTheme() {
   const [themePreference, setThemePreference] = useState<ThemePreference>(getStoredTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
-    themePreference === 'system' ? getSystemTheme() : themePreference
-  );
 
   useEffect(() => {
     localStorage.setItem('theme-preference', themePreference);
+    const root = document.documentElement;
 
-    if (themePreference === 'system') {
-      setResolvedTheme(getSystemTheme());
-
-      // Follow system theme changes live
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = (e: MediaQueryListEvent) => {
-        setResolvedTheme(e.matches ? 'dark' : 'light');
-      };
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } else {
-      setResolvedTheme(themePreference);
+    if (themePreference !== 'system') {
+      root.classList.toggle('dark', themePreference === 'dark');
+      return;
     }
+
+    // Follow the system theme, including live changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const applySystemTheme = () => root.classList.toggle('dark', mediaQuery.matches);
+    applySystemTheme();
+    mediaQuery.addEventListener('change', applySystemTheme);
+    return () => mediaQuery.removeEventListener('change', applySystemTheme);
   }, [themePreference]);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
-  }, [resolvedTheme]);
-
-  return { themePreference, setThemePreference, resolvedTheme };
+  return { themePreference, setThemePreference };
 }

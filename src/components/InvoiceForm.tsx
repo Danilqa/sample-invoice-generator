@@ -257,7 +257,8 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
           `relative` makes it the containing block of the sr-only labels, so they scroll with it
           instead of stretching the page below the fold. */}
       <div className="scrollbar-subtle relative lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:[scrollbar-gutter:stable]">
-        <div className="mx-auto w-full max-w-[600px] px-5 pb-12 sm:px-8 lg:px-10 lg:pb-10">
+        {/* Query container for the @bank-row / @item-row layouts below (sizes in index.css) */}
+        <div className="@container mx-auto w-full max-w-[600px] px-5 pb-12 sm:px-8 lg:px-10 lg:pb-10">
           {header}
 
           <div className="mt-5 lg:mt-6 short:mt-3">
@@ -360,42 +361,47 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
                   {renderTextField('accountName', 'Account name')}
                 </div>
               ) : isUSDCurrency(invoiceData.currency) ? (
-                <div className="grid grid-cols-1 gap-x-3 gap-y-(--row-gap) sm:grid-cols-[minmax(0,1fr)_10.5rem]">
+                <div className="grid grid-cols-1 gap-x-3 gap-y-(--row-gap) @bank-row:grid-cols-[minmax(0,1fr)_10.5rem]">
                   {renderTextField('iban', 'IBAN')}
                   {renderTextField('swiftBic', 'Swift/BIC')}
-                  {renderTextField('accountName', 'Account name', { className: 'sm:col-span-2' })}
+                  {renderTextField('accountName', 'Account name', { className: '@bank-row:col-span-2' })}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-x-3 gap-y-(--row-gap) sm:grid-cols-[minmax(6.5rem,0.8fr)_minmax(6.5rem,1fr)_minmax(0,1.6fr)]">
+                // Sort code and account number are fixed-length, so the account name gets the rest of the row
+                <div className="grid grid-cols-2 gap-x-3 gap-y-(--row-gap) @bank-row:grid-cols-[6rem_6.5rem_minmax(0,1fr)]">
                   {renderTextField('sortCode', 'Sort code')}
                   {renderTextField('accountNumber', 'Account number')}
-                  {renderTextField('accountName', 'Account name', { className: 'col-span-2 sm:col-span-1' })}
+                  {renderTextField('accountName', 'Account name', { className: 'col-span-2 @bank-row:col-span-1' })}
                 </div>
               )}
             </div>
           </FormSection>
 
           <FormSection title="Line items" description="Two items on the invoice. VAT at 20% is added to the total.">
-            <div
-              aria-hidden="true"
-              className="hidden grid-cols-[minmax(0,1fr)_3.5rem_6.5rem_5.75rem] gap-2 pb-2 text-[13px] leading-none text-foreground/70 sm:grid"
-            >
-              <span>Description</span>
-              <span className="text-right">Qty</span>
-              <span className="text-right">Unit price</span>
-              <span className="text-right">Amount</span>
+            {/* Wide columns: one table-like grid. The header and rows share its columns (subgrid), so the
+                Amount column can grow to fit a large typed-in amount and everything stays aligned. */}
+            <div className="@item-row:grid @item-row:grid-cols-[minmax(0,1fr)_3.25rem_6.5rem_minmax(5.5rem,max-content)] @item-row:gap-x-2">
+              <div
+                aria-hidden="true"
+                className="hidden pb-2 text-[13px] leading-none text-foreground/70 @item-row:col-span-full @item-row:grid @item-row:grid-cols-subgrid"
+              >
+                <span>Description</span>
+                <span className="text-right">Qty</span>
+                <span className="text-right">Unit price</span>
+                <span className="text-right">Amount</span>
+              </div>
+              <ul className="flex flex-col gap-y-4 @item-row:col-span-full @item-row:grid @item-row:grid-cols-subgrid @item-row:gap-y-2">
+                {items.map((item, index) => (
+                  <LineItemRow
+                    key={index}
+                    index={index}
+                    item={item}
+                    currencySymbol={currencySymbol}
+                    onUpdate={(field, value) => updateItem(index, field, value)}
+                  />
+                ))}
+              </ul>
             </div>
-            <ul className="flex flex-col gap-4 sm:gap-2">
-              {items.map((item, index) => (
-                <LineItemRow
-                  key={index}
-                  index={index}
-                  item={item}
-                  currencySymbol={currencySymbol}
-                  onUpdate={(field, value) => updateItem(index, field, value)}
-                />
-              ))}
-            </ul>
 
             <dl className="mt-6 border-t pt-4 text-sm">
               <div className="flex items-baseline justify-between py-1">
@@ -497,7 +503,7 @@ interface FieldProps {
 
 const Field = ({ id, label, hint, className, children }: FieldProps) => (
   <div className={cn('flex min-w-0 flex-col gap-2 short:gap-1.5', className)}>
-    <Label htmlFor={id} className="text-[13px] leading-none font-normal text-foreground/70">{label}</Label>
+    <Label htmlFor={id} className="text-[13px] leading-none font-normal whitespace-nowrap text-foreground/70">{label}</Label>
     {children}
     {/* Hidden while an open select list covers it, so its first letter can't peek out at the list's rounded corner */}
     {hint && <p id={`${id}-hint`} className="text-xs leading-snug text-muted-foreground peer-data-[state=open]:invisible">{hint}</p>}
@@ -518,10 +524,11 @@ const LineItemRow = ({ index, item, currencySymbol, onUpdate }: LineItemRowProps
   const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
   const prefix = `item-${index}`;
 
+  // Narrow columns stack each item: the description on its own row, then Qty / Unit price / Amount with labels
   return (
-    <li className="grid grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)] items-end gap-2 sm:grid-cols-[minmax(0,1fr)_3.5rem_6.5rem_5.75rem] sm:items-center">
-      <div className="col-span-3 flex flex-col gap-2 sm:col-span-1">
-        <Label htmlFor={`${prefix}-description`} className="text-[13px] leading-none font-normal text-foreground/70 sm:sr-only">
+    <li className="grid grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)] items-end gap-2 @item-row:col-span-full @item-row:grid-cols-subgrid @item-row:items-center">
+      <div className="col-span-3 flex flex-col gap-2 @item-row:col-span-1">
+        <Label htmlFor={`${prefix}-description`} className="text-[13px] leading-none font-normal text-foreground/70 @item-row:sr-only">
           Item {index + 1}
         </Label>
         <Input
@@ -533,7 +540,7 @@ const LineItemRow = ({ index, item, currencySymbol, onUpdate }: LineItemRowProps
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${prefix}-quantity`} className="text-xs leading-none font-normal text-muted-foreground sm:sr-only">Qty</Label>
+        <Label htmlFor={`${prefix}-quantity`} className="text-xs leading-none font-normal text-muted-foreground @item-row:sr-only">Qty</Label>
         <Input
           id={`${prefix}-quantity`}
           type="number"
@@ -544,7 +551,7 @@ const LineItemRow = ({ index, item, currencySymbol, onUpdate }: LineItemRowProps
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor={`${prefix}-unit-price`} className="text-xs leading-none font-normal text-muted-foreground sm:sr-only">Unit price</Label>
+        <Label htmlFor={`${prefix}-unit-price`} className="text-xs leading-none font-normal text-muted-foreground @item-row:sr-only">Unit price</Label>
         <div className="relative">
           <span aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
             {currencySymbol}
@@ -560,8 +567,8 @@ const LineItemRow = ({ index, item, currencySymbol, onUpdate }: LineItemRowProps
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <span className="text-right text-xs text-muted-foreground sm:sr-only">Amount</span>
-        <span className="flex h-(--field-h) items-center justify-end text-sm tabular-nums">
+        <span className="text-right text-xs leading-none text-muted-foreground @item-row:sr-only">Amount</span>
+        <span className="flex h-(--field-h) items-center justify-end text-sm whitespace-nowrap tabular-nums">
           {formatAmount(quantity * unitPrice, currencySymbol)}
         </span>
       </div>
