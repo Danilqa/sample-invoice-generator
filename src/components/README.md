@@ -49,7 +49,7 @@ short-screen density variables live in `src/index.css`.
 - **Props**: `value`, `symbol` and an optional `className`
 
 ### `Logo.tsx`
-- **Purpose**: The coin-and-receipt logo mark; follows the text colour, so it works in both themes
+- **Purpose**: The logo mark, a receipt inside a coin with a braided rim (in the spirit of Mercury's woven emblem); follows the text colour, so it works in both themes
 
 ### `ThemeMenu.tsx`
 - **Purpose**: Icon button with a System / Light / Dark menu

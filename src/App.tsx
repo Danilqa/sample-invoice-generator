@@ -121,7 +121,7 @@ function App() {
             // Same height as the preview's tab row, so the logo lines up with "Preview"
             <header className="flex h-(--header-h) items-end justify-between gap-4">
               <div className="flex h-11 min-w-0 items-center gap-3">
-                <Logo className="size-7 shrink-0" />
+                <Logo className="size-8 shrink-0" />
                 <h1 className="truncate text-[12.5px] leading-none font-semibold tracking-[0.22em] uppercase">
                   Test Invoice Generator
                 </h1>

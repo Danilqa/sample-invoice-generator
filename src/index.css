@@ -89,11 +89,16 @@
   --input: #e2e2e2;
   --field: #fafafa;
   --ring: #0a0a0a;
-  --canvas: #ededed;
+  --canvas: #f6f5f4;
   --scrollbar: rgb(0 0 0 / 0.16);
+  /* Soft pastel haze behind the invoice (after Luma's sign-in page): peach in the middle, pink and lilac low
+     on the left, cream up top, mint on the right */
   --canvas-gradient:
-    radial-gradient(120% 70% at 85% 0%, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0) 60%),
-    linear-gradient(180deg, #f4f4f4 0%, #ececec 55%, #e5e5e5 100%);
+    radial-gradient(55% 45% at 55% 62%, rgb(250 218 198 / 0.7) 0%, rgb(250 218 198 / 0) 100%),
+    radial-gradient(55% 45% at 18% 90%, rgb(242 212 234 / 0.85) 0%, rgb(242 212 234 / 0) 100%),
+    radial-gradient(45% 40% at 15% 25%, rgb(250 239 212 / 0.75) 0%, rgb(250 239 212 / 0) 100%),
+    radial-gradient(40% 50% at 100% 40%, rgb(212 237 235 / 0.8) 0%, rgb(212 237 235 / 0) 100%),
+    radial-gradient(50% 40% at 85% 100%, rgb(232 220 246 / 0.7) 0%, rgb(232 220 246 / 0) 100%);
   --sheet-shadow:
     0 0 0 1px rgb(0 0 0 / 0.04),
     0 1px 2px rgb(0 0 0 / 0.04),
@@ -134,11 +139,15 @@
   --input: rgb(255 255 255 / 0.1);
   --field: rgb(255 255 255 / 0.035);
   --ring: #f4f4f4;
-  --canvas: #0c0c0c;
+  --canvas: #0d0d0e;
   --scrollbar: rgb(255 255 255 / 0.16);
+  /* The same haze, deep and low-key: amber, plum, bronze, teal and violet glows on near-black */
   --canvas-gradient:
-    radial-gradient(120% 70% at 85% 0%, rgb(255 255 255 / 0.045) 0%, rgb(255 255 255 / 0) 60%),
-    linear-gradient(180deg, #161616 0%, #101010 55%, #0b0b0b 100%);
+    radial-gradient(55% 45% at 55% 62%, rgb(122 70 44 / 0.32) 0%, rgb(122 70 44 / 0) 100%),
+    radial-gradient(55% 45% at 18% 90%, rgb(112 52 96 / 0.36) 0%, rgb(112 52 96 / 0) 100%),
+    radial-gradient(45% 40% at 15% 25%, rgb(104 86 48 / 0.22) 0%, rgb(104 86 48 / 0) 100%),
+    radial-gradient(40% 50% at 100% 40%, rgb(38 96 96 / 0.3) 0%, rgb(38 96 96 / 0) 100%),
+    radial-gradient(50% 40% at 85% 100%, rgb(78 62 124 / 0.28) 0%, rgb(78 62 124 / 0) 100%);
   --sheet-shadow:
     0 0 0 1px rgb(255 255 255 / 0.08),
     0 20px 48px -16px rgb(0 0 0 / 0.7);
