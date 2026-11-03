@@ -6,6 +6,7 @@ import { getBankDetailsByCurrency, generateRandomInvalidBankDetails } from '../u
 import type { BankDetails } from '../utils/bankDetails';
 import { currencies, getCurrencyByCode } from '../utils/currencies';
 import { useHotkey } from '../hooks/useHotkey';
+import { useHasContentBelow } from '../hooks/useHasContentBelow';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
@@ -42,6 +43,8 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
   const [selectedBankDetails, setSelectedBankDetails] = useState<string>('');
   const [isBankListOpen, setIsBankListOpen] = useState(false);
   const bankTriggerRef = useRef<HTMLButtonElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const hasContentBelow = useHasContentBelow(scrollerRef);
 
   // Keyboard shortcuts
   useHotkey('r', () => onGenerate(true));
@@ -255,10 +258,14 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     >
       {/* Desktop: only this column scrolls; it ends where the action bar starts.
           `relative` makes it the containing block of the sr-only labels, so they scroll with it
-          instead of stretching the page below the fold. */}
-      <div className="scrollbar-subtle relative lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:[scrollbar-gutter:stable]">
+          instead of stretching the page below the fold. The bottom scroll padding keeps a focused
+          field clear of the fade at the bottom. */}
+      <div
+        ref={scrollerRef}
+        className="scrollbar-subtle relative lg:min-h-0 lg:flex-1 lg:scroll-pb-6 lg:overflow-y-auto lg:[scrollbar-gutter:stable]"
+      >
         {/* Query container for the @bank-row / @item-row layouts below (sizes in index.css) */}
-        <div className="@container mx-auto w-full max-w-[600px] px-5 pb-12 sm:px-8 lg:px-10 lg:pb-10">
+        <div className="@container mx-auto w-full max-w-[600px] px-5 pb-12 sm:px-8 lg:pb-10">
           {header}
 
           <div className="mt-5 lg:mt-6 short:mt-3">
@@ -282,7 +289,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
               {renderTextField('dueDate', 'Due date', { placeholder: 'DD/MM/YYYY' })}
               {renderTextField('companyName', 'Company name', {
                 className: 'col-span-2 sm:col-span-3',
-                hint: 'Follows the bank details you pick below.',
+                hint: 'Filled in when you pick bank details below.',
               })}
             </div>
           </FormSection>
@@ -380,7 +387,7 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
           <FormSection title="Line items" description="Two items on the invoice. VAT at 20% is added to the total.">
             {/* Wide columns: one table-like grid. The header and rows share its columns (subgrid), so the
                 Amount column can grow to fit a large typed-in amount and everything stays aligned. */}
-            <div className="@item-row:grid @item-row:grid-cols-[minmax(0,1fr)_3.25rem_6.5rem_minmax(5.5rem,max-content)] @item-row:gap-x-2">
+            <div className="@item-row:grid @item-row:grid-cols-[minmax(0,1fr)_3.875rem_7.375rem_minmax(5rem,max-content)] @item-row:gap-x-2">
               <div
                 aria-hidden="true"
                 className="hidden pb-2 text-[13px] leading-none text-foreground/70 @item-row:col-span-full @item-row:grid @item-row:grid-cols-subgrid"
@@ -421,11 +428,24 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
             </dl>
           </FormSection>
         </div>
+
+        {/* Desktop: the form fades out just above the action bar, so a section divider can't sit right on the
+            bar's border as a second line. It sticks to the bottom while more of the form is below; at the end
+            it lies over the bottom padding, so nothing is faded there. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none sticky bottom-0 -mt-6 hidden h-6 bg-linear-to-t from-background to-transparent lg:block"
+        />
       </div>
 
-      {/* Desktop: Mercury-style action bar pinned under the scrolling form, outside the scroll area */}
-      <div className="hidden border-t bg-background lg:block lg:[scrollbar-gutter:stable] lg:overflow-hidden">
-        <div className="mx-auto flex w-full max-w-[600px] justify-end gap-2 px-10 py-(--bar-py)">
+      {/* Desktop: Mercury-style action bar pinned under the scrolling form, outside the scroll area. It casts a
+          soft shadow up over the form while more of the form is hidden below it. `relative` paints the
+          shadow above the form's content. */}
+      <div
+        data-content-below={hasContentBelow || undefined}
+        className="relative hidden border-t bg-background transition-shadow duration-200 data-content-below:shadow-bar lg:block lg:[scrollbar-gutter:stable] lg:overflow-hidden"
+      >
+        <div className="mx-auto flex w-full max-w-[600px] justify-end gap-2 px-8 py-(--bar-py)">
           <FormActions onGenerate={onGenerate} onDownload={onDownload} pdfBlob={pdfBlob} />
         </div>
       </div>
@@ -517,7 +537,8 @@ interface LineItemRowProps {
   onUpdate: (field: keyof InvoiceItem, value: string | number) => void;
 }
 
-const numberInputClass = 'text-right tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+// px-2 rather than the inputs' px-3, so a 4-digit quantity and a price like 12345.67 fit their columns
+const numberInputClass = 'px-2 text-right tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
 
 const LineItemRow = ({ index, item, currencySymbol, onUpdate }: LineItemRowProps) => {
   const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;

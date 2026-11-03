@@ -101,7 +101,7 @@ function SelectItem({
       <span className="flex min-w-0 flex-col gap-0.5">
         <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
         {description && (
-          <span data-slot="select-item-description" className="text-xs text-muted-foreground tabular-nums">
+          <span data-slot="select-item-description" className="text-xs text-muted-foreground">
             {description}
           </span>
         )}

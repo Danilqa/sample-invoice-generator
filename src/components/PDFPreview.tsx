@@ -114,8 +114,11 @@ export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) =
   });
 
   return (
-    // Capped near A4 at 100% zoom: wider than that and the browser viewer stops fitting the page to the width
-    <div className="mx-auto flex w-full max-w-[600px] flex-col lg:min-h-0 lg:max-w-[790px] lg:flex-1">
+    // Below lg the preview sits under the form, so it takes the form's content width (its 600px column minus
+    // the 20px / 32px side padding) and their edges line up. Side by side it's capped near A4 at 100% zoom:
+    // wider than that and the browser viewer stops fitting the page to the width.
+    // A size container, so the sheet can cap its height to A4 for its width (100cqw).
+    <div className="@container mx-auto flex w-full max-w-[560px] flex-col sm:max-w-[536px] lg:min-h-0 lg:max-w-[790px] lg:flex-1">
       {/* Tab row, like the Invoice / Payment link tabs above Mercury's preview */}
       <div className="flex h-(--header-h) shrink-0 items-end justify-between gap-4 border-b border-foreground/[0.08]">
         <h2 className="relative pb-3 text-sm leading-5 font-medium">
@@ -129,7 +132,7 @@ export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) =
             onClick={() => pdfBlob && openPDFInNewTab(pdfBlob)}
             disabled={!pdfBlob}
             title="Open the PDF in a new tab to zoom or print"
-            className="group min-w-0 px-2.5 text-xs font-normal tabular-nums"
+            className="group min-w-0 px-2.5 text-xs font-normal"
           >
             <span className="truncate">invoice-{invoiceData.invoiceNumber}.pdf</span>
             <ArrowUpRight className="size-3.5 opacity-60 transition-opacity group-hover:opacity-100" aria-hidden="true" />
@@ -139,10 +142,13 @@ export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) =
         </div>
       </div>
 
+      {/* A4 sized. Side by side it fills the column's height instead (the page scrolls inside it), but never
+          gets taller than the page: on tall screens the viewer would fill the rest with its dark background.
+          The cap is 3px short of A4, as at some widths the viewer draws the page up to 1.6px shorter. */}
       <div
         ref={sheetRef}
         data-keyboard-focus={hasKeyboardFocus || undefined}
-        className="relative mt-5 aspect-[210/297] w-full overflow-hidden rounded-[10px] bg-white shadow-sheet data-keyboard-focus:outline-2 data-keyboard-focus:outline-offset-4 lg:aspect-auto lg:min-h-0 lg:flex-1"
+        className="relative mt-5 aspect-[210/297] w-full overflow-hidden rounded-[10px] bg-white shadow-sheet data-keyboard-focus:outline-2 data-keyboard-focus:outline-offset-4 lg:aspect-auto lg:max-h-[calc(100cqw*297/210-3px)] lg:min-h-0 lg:flex-1"
       >
         {/* The viewer is overscanned to hide the dark margin it draws around the page, so the page reads as
             one white sheet even when scrolled to its end: 5px is cut off at the top, left and right, and 8px

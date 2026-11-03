@@ -65,9 +65,10 @@
   /* GBP sort code (6rem) + account number (6.5rem) + two gaps leave the account name at least 232px,
      enough for the default "British Heart Foundation (BHF)"; USD's IBAN keeps 276px next to Swift/BIC */
   --container-bank-row: 28.5rem;
-  /* Qty + unit price + amount take 268px, leaving the description at least 252px:
+  /* Qty (62px: room for 4 digits) + unit price (118px: room for 12345.67) + amount (at least 80px: the
+     largest generated amount, 5000.00) + three gaps take 284px, leaving the description at least 252px:
      the longest generated product name ("Handcrafted Aluminum Computer") needs 248px */
-  --container-item-row: 32.5rem;
+  --container-item-row: 33.5rem;
 }
 
 /* Black-and-white palette: neutral greys only, no accent hue */
@@ -97,6 +98,7 @@
     0 0 0 1px rgb(0 0 0 / 0.04),
     0 1px 2px rgb(0 0 0 / 0.04),
     0 16px 40px -12px rgb(0 0 0 / 0.14);
+  --bar-shadow: 0 -10px 24px -12px rgb(0 0 0 / 0.14);
 
   /* Layout density */
   --header-h: 4rem;
@@ -140,6 +142,7 @@
   --sheet-shadow:
     0 0 0 1px rgb(255 255 255 / 0.08),
     0 20px 48px -16px rgb(0 0 0 / 0.7);
+  --bar-shadow: 0 -10px 24px -12px rgb(0 0 0 / 0.8);
 }
 
 @utility bg-canvas-gradient {
@@ -149,6 +152,11 @@
 
 @utility shadow-sheet {
   box-shadow: var(--sheet-shadow);
+}
+
+/* Desktop action bar while more of the form is hidden below it */
+@utility shadow-bar {
+  box-shadow: var(--bar-shadow);
 }
 
 /* Thin scrollbar in the theme's grey, for the scrolling form column */
