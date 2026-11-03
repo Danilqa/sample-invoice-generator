@@ -1,23 +1,23 @@
 import { useId } from 'react';
 import type { SVGProps } from 'react';
 
-// Inline copy of public/logo.svg that follows the text colour (and so dark mode)
+// Inline copy of public/logo.svg that follows the text colour (and so dark mode):
+// a coin with a torn-off receipt cut out of it
 export const Logo = (props: SVGProps<SVGSVGElement>) => {
   // useId output can contain characters that are awkward inside url(#...)
-  const maskId = `logo-sheet-${useId().replace(/[^\w-]/g, '')}`;
+  const maskId = `logo-receipt-${useId().replace(/[^\w-]/g, '')}`;
 
   return (
     <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" focusable="false" {...props}>
       <defs>
         <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
           <rect width="32" height="32" fill="#fff" />
-          <path d="M11.5 8.75h6.25l3 3v11.5h-9.25z" fill="#000" />
-          <path d="M17.75 8.75v3h3" stroke="#fff" strokeWidth="1.25" strokeLinejoin="round" />
-          <path d="M14 16.25h4.25M14 19.5h2.75" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+          <path d="M10 8H22V24L20 22L18 24L16 22L14 24L12 22L10 24Z" fill="#000" />
+          <path d="M13 12h6v2h-6zM13 16h4v2h-4z" fill="#fff" />
         </mask>
       </defs>
-      <circle cx="16" cy="16" r="15.125" stroke="currentColor" strokeWidth="1.75" />
-      <circle cx="16" cy="16" r="12.25" fill="currentColor" mask={`url(#${maskId})`} />
+      <circle cx="16" cy="16" r="15" stroke="currentColor" strokeWidth="2" />
+      <circle cx="16" cy="16" r="12" fill="currentColor" mask={`url(#${maskId})`} />
     </svg>
   );
 };

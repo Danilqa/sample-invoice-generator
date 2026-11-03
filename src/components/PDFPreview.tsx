@@ -1,6 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { PDFViewer } from '@react-pdf/renderer';
 import { ArrowUpRight } from 'lucide-react';
 import { InvoicePDF } from './InvoicePDF';
+import { Button } from '@/components/ui/button';
 import type { InvoiceData } from '../types/invoice';
 
 // Opens the same blob the Download button saves, in the browser's full PDF viewer
@@ -11,12 +14,39 @@ const openPDFInNewTab = (pdfBlob: Blob) => {
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 };
 
+// On phones the preview sits below the whole form, so the PDF viewer waits until it scrolls near.
+// Wider screens (and browsers without IntersectionObserver) mount it straight away.
+const shouldMountEagerly = () =>
+  typeof IntersectionObserver === 'undefined' || !window.matchMedia('(max-width: 767.98px)').matches;
+
 interface PDFPreviewProps {
   invoiceData: InvoiceData;
   pdfBlob: Blob | null;
+  // Extra controls at the right end of the tab row
+  actions?: ReactNode;
 }
 
-export const PDFPreview = ({ invoiceData, pdfBlob }: PDFPreviewProps) => {
+export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) => {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const [isNearViewport, setIsNearViewport] = useState(shouldMountEagerly);
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (isNearViewport || !sheet) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sheet);
+    return () => observer.disconnect();
+  }, [isNearViewport]);
+
   // Create a unique key that changes whenever any relevant data changes
   const pdfKey = JSON.stringify({
     invoiceNumber: invoiceData.invoiceNumber,
@@ -34,28 +64,35 @@ export const PDFPreview = ({ invoiceData, pdfBlob }: PDFPreviewProps) => {
     // Capped near A4 at 100% zoom: wider than that and the browser viewer stops fitting the page to the width
     <div className="mx-auto flex w-full max-w-[600px] flex-col lg:min-h-0 lg:max-w-[790px] lg:flex-1">
       {/* Tab row, like the Invoice / Payment link tabs above Mercury's preview */}
-      <div className="flex items-end justify-between gap-4 border-b border-foreground/[0.08]">
-        <span className="relative pb-3 text-sm font-medium">
+      <div className="flex h-(--header-h) shrink-0 items-end justify-between gap-4 border-b border-foreground/[0.08]">
+        <h2 className="relative pb-3 text-sm leading-5 font-medium">
           Preview
           <span aria-hidden="true" className="absolute inset-x-0 -bottom-px h-[1.5px] rounded-full bg-foreground" />
-        </span>
-        <button
-          type="button"
-          onClick={() => pdfBlob && openPDFInNewTab(pdfBlob)}
-          disabled={!pdfBlob}
-          title="Open the PDF in a new tab to zoom or print"
-          className="group mb-2 inline-flex min-w-0 items-center gap-1.5 rounded-full px-2 py-1 text-xs text-muted-foreground tabular-nums outline-none transition-colors hover:bg-foreground/[0.05] hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/15 disabled:opacity-50"
-        >
-          <span className="truncate">invoice-{invoiceData.invoiceNumber}.pdf</span>
-          <ArrowUpRight className="size-3.5 shrink-0 opacity-60 transition-opacity group-hover:opacity-100" aria-hidden="true" />
-          <span className="sr-only">(opens in a new tab)</span>
-        </button>
+        </h2>
+        <div className="flex h-11 min-w-0 items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => pdfBlob && openPDFInNewTab(pdfBlob)}
+            disabled={!pdfBlob}
+            title="Open the PDF in a new tab to zoom or print"
+            className="group min-w-0 px-2.5 text-xs font-normal tabular-nums"
+          >
+            <span className="truncate">invoice-{invoiceData.invoiceNumber}.pdf</span>
+            <ArrowUpRight className="size-3.5 opacity-60 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+            <span className="sr-only">(opens in a new tab)</span>
+          </Button>
+          {actions}
+        </div>
       </div>
 
-      <div className="relative mt-5 aspect-[210/297] w-full overflow-hidden rounded-[10px] bg-white shadow-sheet lg:aspect-auto lg:min-h-0 lg:flex-1">
+      <div
+        ref={sheetRef}
+        className="relative mt-5 aspect-[210/297] w-full overflow-hidden rounded-[10px] bg-white shadow-sheet lg:aspect-auto lg:min-h-0 lg:flex-1"
+      >
         {/* The viewer is overscanned by a few pixels to hide its grey page margin, so the page reads as one white sheet */}
-        {pdfBlob ? (
-          <PDFViewer 
+        {pdfBlob && isNearViewport ? (
+          <PDFViewer
             key={pdfKey}
             showToolbar={false}
             className="absolute -top-[5px] -left-[5px] block h-[calc(100%+5px)] w-[calc(100%+10px)] max-w-none border-0"
@@ -71,7 +108,7 @@ export const PDFPreview = ({ invoiceData, pdfBlob }: PDFPreviewProps) => {
   );
 };
 
-// Grey bars shown while the first PDF is being generated
+// Grey bars shown until the PDF is ready (and, on phones, until the sheet scrolls into view)
 const SheetPlaceholder = () => (
   <div aria-hidden="true" className="flex size-full animate-pulse flex-col gap-10 p-10">
     <div className="flex justify-between">

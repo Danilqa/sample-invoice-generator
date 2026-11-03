@@ -1,30 +1,37 @@
 # Components
 
 This directory contains the decomposed components of the invoice generator application.
+Styling uses Tailwind CSS v4 and [shadcn/ui](https://ui.shadcn.com) primitives from `./ui`; theme tokens and the
+short-screen density variables live in `src/index.css`.
 
 ## Component Structure
 
 ### `InvoiceForm.tsx`
-- **Purpose**: Displays the invoice form with all invoice data fields
-- **Props**: 
-  - `invoiceData`: The current invoice data
-  - `onGenerate`: Callback to generate a new invoice
-  - `onDownload`: Callback to download the PDF
-  - `pdfBlob`: The current PDF blob for download state
-- **Features**: 
-  - Displays all invoice fields in a read-only format
-  - Shows invoice items in a card layout
-  - Contains the generate and download buttons
-  - Calculates and displays the total with VAT
-
-### `PDFPreview.tsx`
-- **Purpose**: Renders the PDF preview using react-pdf
+- **Purpose**: The left column: page heading, the editable form and the Regenerate / Download PDF actions
 - **Props**:
   - `invoiceData`: The current invoice data
-  - `pdfBlob`: The current PDF blob for preview state
+  - `onGenerate`: Called with `true` to regenerate the data while keeping the client and bank details
+  - `onDownload`: Downloads the current PDF
+  - `pdfBlob`: The current PDF blob; Download is disabled until it exists
+  - `onUpdateItems`: Called when a line item changes
+  - `onUpdateBankDetails`: Called when bank details are picked or generated
+  - `onUpdateField`: Called when a single invoice field changes
+  - `header`: Optional content rendered at the top of the column (the app's logo and name)
 - **Features**:
-  - Displays the PDF preview in a viewer
-  - Only shows when PDF blob is available
+  - Invoice, Bank details (currency switch, charity picker, currency-specific fields) and Line items sections
+  - Subtotal, VAT and the total incl. VAT, with the same digits as the PDF
+  - R and D keyboard shortcuts (ignored while typing)
+  - On desktop the form scrolls on its own and the actions sit in a bar pinned below it
+
+### `PDFPreview.tsx`
+- **Purpose**: The live PDF preview under a "Preview" tab row
+- **Props**:
+  - `invoiceData`: The current invoice data
+  - `pdfBlob`: The current PDF blob; a placeholder sheet shows until it exists
+  - `actions`: Optional extra controls at the right end of the tab row
+- **Features**:
+  - Shows the PDF as a white sheet and offers to open it in a new tab
+  - On phones the viewer mounts only when the sheet scrolls near the screen
 
 ### `InvoicePDF.tsx`
 - **Purpose**: Defines the PDF document structure and styling
@@ -35,13 +42,23 @@ This directory contains the decomposed components of the invoice generator appli
   - Renders the complete invoice document
   - Handles all PDF-specific formatting
 
-### `InvoiceItemCard.tsx` (Internal component)
-- **Purpose**: Renders individual invoice items in the form
-- **Props**:
-  - `item`: The invoice item data
-- **Features**:
-  - Displays item description, quantity, unit price, and total
-  - Used within the InvoiceForm component
+### `Amount.tsx`
+- **Purpose**: A money figure with smaller raised cents, in Mercury's style
+- **Props**: `value`, `symbol` and an optional `className`
+
+### `Logo.tsx`
+- **Purpose**: The coin-and-receipt logo mark; follows the text colour, so it works in both themes
+
+### `ThemeMenu.tsx`
+- **Purpose**: Icon button with a System / Light / Dark menu
+- **Props**: `value`, `onChange` and an optional `className` (state comes from `src/hooks/useTheme.ts`)
+
+### `StarBanner.tsx`
+- **Purpose**: The GitHub star banner at the top of the page
+- **Props**: `onDismiss`, called when the banner is clicked
+
+### `ui/`
+- shadcn/ui components: button, input, label, kbd, select, dropdown menu and toggle group
 
 ## Usage
 
@@ -49,13 +66,16 @@ This directory contains the decomposed components of the invoice generator appli
 import { InvoiceForm, PDFPreview } from './components';
 
 // In your main component
-<InvoiceForm 
+<InvoiceForm
   invoiceData={invoiceData}
   onGenerate={handleGenerate}
   onDownload={handleDownload}
   pdfBlob={pdfBlob}
+  onUpdateItems={handleUpdateItems}
+  onUpdateBankDetails={handleUpdateBankDetails}
+  onUpdateField={handleUpdateField}
 />
-<PDFPreview 
+<PDFPreview
   invoiceData={invoiceData}
   pdfBlob={pdfBlob}
 />

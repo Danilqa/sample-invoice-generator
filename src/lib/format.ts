@@ -1,7 +1,7 @@
-// Uses toFixed(2) so the digits always match the generated PDF, then groups thousands
+// Same digits as the generated PDF: toFixed(2) with no thousands separators (e.g. 3588.71)
 export function splitAmount(value: number): { whole: string; cents: string } {
   const [whole, cents = ''] = value.toFixed(2).split('.');
-  return { whole: whole.replace(/\B(?=(\d{3})+(?!\d))/g, ','), cents };
+  return { whole, cents };
 }
 
 export function formatAmount(value: number, symbol: string): string {
