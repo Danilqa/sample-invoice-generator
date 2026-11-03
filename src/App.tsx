@@ -1,29 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Theme, Container, Flex, Text, Box, DropdownMenu, IconButton } from '@radix-ui/themes';
-import { SunIcon, MoonIcon, DesktopIcon, CheckIcon } from '@radix-ui/react-icons';
 import { InvoiceForm, PDFPreview } from './components';
+import { Logo } from './components/Logo';
+import { StarBanner } from './components/StarBanner';
+import { ThemeMenu } from './components/ThemeMenu';
+import { useTheme } from './hooks/useTheme';
 import { generateFakeInvoice, generatePDFBlob, downloadPDF } from './utils';
 import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from './types/invoice';
-import './App.css';
-
-type ThemePreference = 'system' | 'light' | 'dark';
-
-function getSystemTheme(): 'light' | 'dark' {
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-  return 'light';
-}
-
-function getStoredTheme(): ThemePreference {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('theme-preference');
-    if (stored === 'system' || stored === 'light' || stored === 'dark') {
-      return stored;
-    }
-  }
-  return 'system';
-}
 
 function getBannerDismissed(): boolean {
   if (typeof window !== 'undefined') {
@@ -35,30 +17,8 @@ function getBannerDismissed(): boolean {
 function App() {
   const [invoiceData, setInvoiceData] = useState<InvoiceData>(generateFakeInvoice());
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [themePreference, setThemePreference] = useState<ThemePreference>(getStoredTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(
-    themePreference === 'system' ? getSystemTheme() : themePreference
-  );
+  const { themePreference, setThemePreference } = useTheme();
   const [bannerDismissed, setBannerDismissed] = useState(getBannerDismissed);
-
-  // Handle theme changes
-  useEffect(() => {
-    localStorage.setItem('theme-preference', themePreference);
-    
-    if (themePreference === 'system') {
-      setResolvedTheme(getSystemTheme());
-      
-      // Listen for system theme changes
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = (e: MediaQueryListEvent) => {
-        setResolvedTheme(e.matches ? 'dark' : 'light');
-      };
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    } else {
-      setResolvedTheme(themePreference);
-    }
-  }, [themePreference]);
 
   // Generate invoice on component mount
   useEffect(() => {
@@ -138,97 +98,73 @@ function App() {
     setPdfBlob(blob);
   };
 
+  const dismissBanner = () => {
+    localStorage.setItem('banner-dismissed', 'true');
+    setBannerDismissed(true);
+  };
+
   return (
-    <Theme appearance={resolvedTheme}>
+    <div className="flex min-h-dvh flex-col lg:h-dvh">
       {/* GitHub Star Banner */}
-      {!bannerDismissed && (
-        <a 
-          href="https://github.com/Danilqa/sample-invoice-generator" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="github-star-banner"
-          onClick={() => {
-            localStorage.setItem('banner-dismissed', 'true');
-            setBannerDismissed(true);
-          }}
+      {!bannerDismissed && <StarBanner onDismiss={dismissBanner} />}
+
+      <main className="flex flex-1 flex-col lg:min-h-0 lg:flex-row">
+        <InvoiceForm
+          invoiceData={invoiceData}
+          onGenerate={handleGenerate}
+          onDownload={handleDownload}
+          pdfBlob={pdfBlob}
+          onUpdateItems={handleUpdateItems}
+          onUpdateBankDetails={handleUpdateBankDetails}
+          onUpdateField={handleUpdateField}
+          header={
+            // Same height as the preview's tab row, so the logo lines up with "Preview"
+            <header className="flex h-(--header-h) items-end justify-between gap-4">
+              <div className="flex h-11 min-w-0 items-center gap-3">
+                <Logo className="size-8 shrink-0" />
+                <h1 className="truncate text-[12.5px] leading-none font-semibold tracking-[0.22em] uppercase">
+                  Test Invoice Generator
+                </h1>
+              </div>
+              {/* The theme menu sits in the preview's tab row on desktop */}
+              <div className="flex h-11 items-center lg:hidden">
+                <ThemeMenu value={themePreference} onChange={setThemePreference} className="-mr-2" />
+              </div>
+            </header>
+          }
+        />
+
+        <section
+          aria-label="Invoice preview"
+          className="bg-canvas-gradient flex flex-1 flex-col border-t px-5 pb-5 sm:px-8 lg:min-h-0 lg:min-w-0 lg:border-t-0 lg:px-10"
         >
-          ⭐️ Support this app by giving it a star on Github
-        </a>
-      )}
-      
-      <Container size="4" style={{ height: '100%', padding: '20px', paddingBottom: 0 }}>
-        <Flex justify="between" align="start" mb="4">
-          <Flex align="center" gap="3">
-            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Logo" style={{ width: 40, height: 40 }} />
-            <Box>
-              <Text size="6" weight="bold">Dummy Invoice Generator</Text>
-              <br/>
-              <Text size="1">For development and testing purposes only.</Text>
-            </Box>
-          </Flex>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <IconButton variant="ghost" size="2" style={{ color: resolvedTheme === 'dark' ? 'white' : 'black' }}>
-                {themePreference === 'system' && <DesktopIcon width="18" height="18" />}
-                {themePreference === 'light' && <SunIcon width="18" height="18" />}
-                {themePreference === 'dark' && <MoonIcon width="18" height="18" />}
-              </IconButton>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content align="end">
-              <DropdownMenu.Item onClick={() => setThemePreference('system')}>
-                <DesktopIcon width="16" height="16" />
-                System
-                {themePreference === 'system' && <CheckIcon style={{ marginLeft: 'auto' }} />}
-              </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={() => setThemePreference('light')}>
-                <SunIcon width="16" height="16" />
-                Light
-                {themePreference === 'light' && <CheckIcon style={{ marginLeft: 'auto' }} />}
-              </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={() => setThemePreference('dark')}>
-                <MoonIcon width="16" height="16" />
-                Dark
-                {themePreference === 'dark' && <CheckIcon style={{ marginLeft: 'auto' }} />}
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </Flex>
-        <Flex 
-          direction={{ initial: 'column', md: 'row' }} 
-          gap="4" 
-          style={{ height: '100%' }}
-        >
-          <InvoiceForm 
-            invoiceData={invoiceData}
-            onGenerate={handleGenerate}
-            onDownload={handleDownload}
-            pdfBlob={pdfBlob}
-            onUpdateItems={handleUpdateItems}
-            onUpdateBankDetails={handleUpdateBankDetails}
-            onUpdateField={handleUpdateField}
-          />
-          <PDFPreview 
+          <PDFPreview
             invoiceData={invoiceData}
             pdfBlob={pdfBlob}
+            actions={
+              <ThemeMenu
+                value={themePreference}
+                onChange={setThemePreference}
+                className="-mr-2 hidden lg:inline-flex"
+              />
+            }
           />
-        </Flex>
-        
-        {/* Footer */}
-        <Box mt="2" style={{ textAlign: 'center' }}>
-          <Text size="2" color="gray">
+
+          {/* Footer */}
+          <footer className="pt-4 text-center text-xs text-muted-foreground">
             Vibe-coded with 💛 by{' '}
-            <a 
-              href="https://github.com/Danilqa/" 
-              target="_blank" 
+            <a
+              href="https://github.com/Danilqa/"
+              target="_blank"
               rel="noopener noreferrer"
-              style={{ color: 'inherit', textDecoration: 'underline' }}
+              className="rounded-sm text-foreground/80 underline decoration-foreground/25 underline-offset-[3px] transition-colors hover:text-foreground hover:decoration-foreground/60 outline-none keyboard-focus:outline-solid keyboard-focus:outline-2 keyboard-focus:outline-offset-2"
             >
               Dan
             </a>
-          </Text>
-        </Box>
-      </Container>
-    </Theme>
+          </footer>
+        </section>
+      </main>
+    </div>
   );
 }
 

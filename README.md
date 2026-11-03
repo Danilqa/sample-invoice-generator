@@ -1,4 +1,4 @@
-# UK Dummy Invoice Generator
+# Test Invoice Generator
 
 THE PROJECT IS VIBE-CODED. THE CODE IS LOW-QUALITY.
 

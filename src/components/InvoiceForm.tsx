@@ -1,10 +1,30 @@
-import { Flex, Card, Text, Button, TextField, Separator, Grid, Box, Select, Kbd } from '@radix-ui/themes';
-import { ChevronDownIcon, FileTextIcon, IdCardIcon, CubeIcon } from '@radix-ui/react-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
+import { Download, RefreshCw, Shuffle } from 'lucide-react';
 import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from '../types/invoice';
 import { getBankDetailsByCurrency, generateRandomInvalidBankDetails } from '../utils/bankDetails';
+import type { BankDetails } from '../utils/bankDetails';
 import { currencies, getCurrencyByCode } from '../utils/currencies';
 import { useHotkey } from '../hooks/useHotkey';
+import { useHasContentBelow } from '../hooks/useHasContentBelow';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Kbd } from '@/components/ui/kbd';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Amount } from '@/components/Amount';
+import { formatAmount } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
@@ -14,12 +34,17 @@ interface InvoiceFormProps {
   onUpdateItems?: (items: InvoiceItem[]) => void;
   onUpdateBankDetails?: (bankDetails: BankDetailsUpdate) => void;
   onUpdateField?: (field: keyof InvoiceData, value: string) => void;
+  // Rendered at the top of the column, above the page heading (logo and app name)
+  header?: ReactNode;
 }
 
-export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUpdateItems, onUpdateBankDetails, onUpdateField }: InvoiceFormProps) => {
+export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUpdateItems, onUpdateBankDetails, onUpdateField, header }: InvoiceFormProps) => {
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [selectedBankDetails, setSelectedBankDetails] = useState<string>('');
-  const [isItemsExpanded, setIsItemsExpanded] = useState<boolean>(false);
+  const [isBankListOpen, setIsBankListOpen] = useState(false);
+  const bankTriggerRef = useRef<HTMLButtonElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const hasContentBelow = useHasContentBelow(scrollerRef);
 
   // Keyboard shortcuts
   useHotkey('r', () => onGenerate(true));
@@ -118,8 +143,6 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     setItems(firstTwoItems);
   }, [invoiceData.items]);
 
-
-
   const updateItem = (index: number, field: keyof InvoiceItem, value: string | number) => {
     const newItems = [...items];
     
@@ -211,279 +234,365 @@ export const InvoiceForm = ({ invoiceData, onGenerate, onDownload, pdfBlob, onUp
     return sum + (quantity * unitPrice);
   }, 0);
 
+  const currencySymbol = getCurrencyByCode(invoiceData.currency)?.symbol || '£';
+
+  // Plain text field bound to a top-level invoice field
+  const renderTextField = (field: keyof InvoiceData, label: string, options: { hint?: string; className?: string; placeholder?: string } = {}) => (
+    <Field id={field} label={label} hint={options.hint} className={options.className}>
+      <Input
+        id={field}
+        value={invoiceData[field] as string}
+        placeholder={options.placeholder}
+        onChange={(e) => onUpdateField?.(field, e.target.value)}
+        aria-describedby={options.hint ? `${field}-hint` : undefined}
+        autoComplete="off"
+        spellCheck={false}
+      />
+    </Field>
+  );
+
   return (
-    <Card style={{ flex: 1, padding: '20px', overflow: 'auto' }}>
-      <Flex direction="column" gap="4">
-        <Flex direction={{ initial: 'column', sm: 'row' }} gap="3">
-          <Button size="3" variant="soft" color="blue" onClick={() => onGenerate(true)}>
-            Regenerate data <Kbd>R</Kbd>
-          </Button>
+    <section
+      aria-labelledby="invoice-details-title"
+      className="flex flex-col bg-background lg:min-h-0 lg:w-[clamp(480px,42vw,620px)] lg:shrink-0 lg:border-r"
+    >
+      {/* Desktop: only this column scrolls; it ends where the action bar starts.
+          `relative` makes it the containing block of the sr-only labels, so they scroll with it
+          instead of stretching the page below the fold. The bottom scroll padding keeps a focused
+          field clear of the fade at the bottom. */}
+      <div
+        ref={scrollerRef}
+        className="scrollbar-subtle relative lg:min-h-0 lg:flex-1 lg:scroll-pb-6 lg:overflow-y-auto lg:[scrollbar-gutter:stable]"
+      >
+        {/* Query container for the @bank-row / @item-row layouts below (sizes in index.css) */}
+        <div className="@container mx-auto w-full max-w-[600px] px-5 pb-12 sm:px-8 lg:pb-10">
+          {header}
 
-          <Button size="3" variant="soft" color="pink" onClick={onDownload} disabled={!pdfBlob}>
-            Download PDF <Kbd>D</Kbd>
-          </Button>
-        </Flex>
+          <div className="mt-5 lg:mt-6 short:mt-3">
+            <h2 id="invoice-details-title" className="text-[28px] leading-tight font-normal tracking-[-0.02em] short:text-2xl">
+              Invoice details
+            </h2>
+            <p className="mt-1.5 text-sm text-muted-foreground short:mt-1 short:text-[13px]">
+              For development and testing purposes only.
+            </p>
+          </div>
 
-        <Separator />
+          {/* Mobile and tablet: pill actions under the heading, like Mercury's home actions */}
+          <div className="mt-6 grid grid-cols-2 gap-2 sm:flex lg:hidden">
+            <FormActions onGenerate={onGenerate} onDownload={onDownload} pdfBlob={pdfBlob} />
+          </div>
 
-        <Flex align="center" gap="2">
-          <FileTextIcon width="18" height="18" />
-          <Text size="4" weight="bold">Invoice Details</Text>
-        </Flex>
-        <Grid columns={{ initial: "1", sm: "2" }} gap="3">
-          <Box>
-            <Text as="label" htmlFor="invoiceNumber" size="2" weight="bold">Invoice Number</Text>
-            <TextField.Root 
-              id="invoiceNumber" 
-              value={invoiceData.invoiceNumber} 
-              onChange={(e) => onUpdateField?.('invoiceNumber', e.target.value)}
-            />
-          </Box>
-          <Box>
-            <Text as="label" htmlFor="issueDate" size="2" weight="bold">Issue Date</Text>
-            <TextField.Root 
-              id="issueDate" 
-              value={invoiceData.issueDate} 
-              onChange={(e) => onUpdateField?.('issueDate', e.target.value)}
-            />
-          </Box>
-          <Box>
-            <Text as="label" htmlFor="dueDate" size="2" weight="bold">Due Date</Text>
-            <TextField.Root 
-              id="dueDate" 
-              value={invoiceData.dueDate} 
-              onChange={(e) => onUpdateField?.('dueDate', e.target.value)}
-            />
-          </Box>
-          <Box>
-            <Text as="label" htmlFor="companyName" size="2" weight="bold">Company Name</Text>
-            <TextField.Root 
-              id="companyName" 
-              value={invoiceData.companyName} 
-              onChange={(e) => onUpdateField?.('companyName', e.target.value)}
-            />
-          </Box>
-        </Grid>
+          <FormSection title="Invoice" description="Number, dates and who the invoice is from.">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-(--row-gap) sm:grid-cols-3">
+              {renderTextField('invoiceNumber', 'Invoice number', { className: 'col-span-2 sm:col-span-1' })}
+              {renderTextField('issueDate', 'Issue date', { placeholder: 'DD/MM/YYYY' })}
+              {renderTextField('dueDate', 'Due date', { placeholder: 'DD/MM/YYYY' })}
+              {renderTextField('companyName', 'Company name', {
+                className: 'col-span-2 sm:col-span-3',
+                hint: 'Filled in when you pick bank details below.',
+              })}
+            </div>
+          </FormSection>
 
-        <Separator />
-
-        <Flex align="center" gap="2">
-          <IdCardIcon width="18" height="18" />
-          <Text size="4" weight="bold">Bank Details</Text>
-        </Flex>
-        <Grid gap="3" columns="70px 1fr">
-          <Box>
-            <Flex direction="column" gap="2">
-              <Text as="label" htmlFor="currency" size="2" weight="bold">Currency</Text>
-              <Select.Root
-                value={invoiceData.currency} 
-                onValueChange={(value) => onUpdateField?.('currency', value)}
-              >
-                <Select.Trigger placeholder="Choose currency..." />
-                <Select.Content>
+          <FormSection title="Bank details" description="Where the invoice asks to be paid.">
+            <div className="flex flex-col gap-(--row-gap)">
+              <div className="flex flex-col gap-2 short:gap-1.5">
+                <span id="currency-label" className="text-[13px] leading-none text-foreground/70">Currency</span>
+                <ToggleGroup
+                  type="single"
+                  value={invoiceData.currency}
+                  onValueChange={(value) => {
+                    // Radix clears the value when the active item is clicked again; ignore that
+                    if (value) onUpdateField?.('currency', value);
+                  }}
+                  aria-labelledby="currency-label"
+                  className="grid w-full grid-cols-3"
+                >
                   {currencies.map((currency) => (
-                    <Select.Item key={currency.code} value={currency.code}>
-                      {currency.flag}
-                    </Select.Item>
+                    <ToggleGroupItem
+                      key={currency.code}
+                      value={currency.code}
+                      aria-label={`${currency.name} (${currency.code})`}
+                      title={currency.name}
+                    >
+                      <span aria-hidden="true" className="text-[15px] leading-none">{currency.flag}</span>
+                      <span className="tracking-wide">{currency.code}</span>
+                    </ToggleGroupItem>
                   ))}
-                </Select.Content>
-              </Select.Root>
-            </Flex>
-          </Box>
-          <Box>
-            <Flex direction="column" gap="2">
-                <Text as="label" htmlFor="bankDetails" size="2" weight="bold">Select Bank Details</Text>
-                <Select.Root value={selectedBankDetails} onValueChange={handleBankDetailsChange}>
-                  <Select.Trigger placeholder="Choose bank details..." />
-                  <Select.Content>
-                    {currentBankDetails.map((details) => (
-                      <Select.Item key={details.name} value={details.name}>
-                        {details.name}
-                      </Select.Item>
-                    ))}
-                    <Select.Item value="random">Generate random invalid</Select.Item>
-                  </Select.Content>
-                </Select.Root>
-                <Text size="1" color="gray">
-                    Real charity bank details from public sources.
-                </Text>
-            </Flex>
-          </Box>
-        </Grid>
+                </ToggleGroup>
+              </div>
 
-        {isEURCurrency(invoiceData.currency) ? (
-          <Grid columns={{ initial: "1", sm: "2" }} gap="3">
-            <Box>
-              <Text as="label" htmlFor="iban" size="2" weight="bold">IBAN</Text>
-              <TextField.Root 
-                id="iban" 
-                value={invoiceData.iban} 
-                onChange={(e) => onUpdateField?.('iban', e.target.value)}
-              />
-            </Box>
-            <Box>
-              <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
-              <TextField.Root 
-                id="accountName" 
-                value={invoiceData.accountName} 
-                onChange={(e) => onUpdateField?.('accountName', e.target.value)}
-              />
-            </Box>
-          </Grid>
-        ) : isUSDCurrency(invoiceData.currency) ? (
-          <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3">
-            <Box>
-              <Text as="label" htmlFor="iban" size="2" weight="bold">IBAN</Text>
-              <TextField.Root 
-                id="iban" 
-                value={invoiceData.iban} 
-                onChange={(e) => onUpdateField?.('iban', e.target.value)}
-              />
-            </Box>
-            <Box>
-              <Text as="label" htmlFor="swiftBic" size="2" weight="bold">Swift/BIC</Text>
-              <TextField.Root 
-                id="swiftBic" 
-                value={invoiceData.swiftBic} 
-                onChange={(e) => onUpdateField?.('swiftBic', e.target.value)}
-              />
-            </Box>
-            <Box>
-              <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
-              <TextField.Root 
-                id="accountName" 
-                value={invoiceData.accountName} 
-                onChange={(e) => onUpdateField?.('accountName', e.target.value)}
-              />
-            </Box>
-          </Grid>
-        ) : (
-          <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3">
-            <Box>
-              <Text as="label" htmlFor="sortCode" size="2" weight="bold">Sort Code</Text>
-              <TextField.Root 
-                id="sortCode" 
-                value={invoiceData.sortCode} 
-                onChange={(e) => onUpdateField?.('sortCode', e.target.value)}
-              />
-            </Box>
-            <Box>
-              <Text as="label" htmlFor="accountNumber" size="2" weight="bold">Account Number</Text>
-              <TextField.Root 
-                id="accountNumber" 
-                value={invoiceData.accountNumber} 
-                onChange={(e) => onUpdateField?.('accountNumber', e.target.value)}
-              />
-            </Box>
-            <Box>
-              <Text as="label" htmlFor="accountName" size="2" weight="bold">Account Name</Text>
-              <TextField.Root 
-                id="accountName" 
-                value={invoiceData.accountName} 
-                onChange={(e) => onUpdateField?.('accountName', e.target.value)}
-              />
-            </Box>
-          </Grid>
-        )}
+              <Field id="bankDetails" label="Bank details" hint="Real charity bank details from public sources.">
+                <Select
+                  value={selectedBankDetails}
+                  onValueChange={handleBankDetailsChange}
+                  open={isBankListOpen}
+                  onOpenChange={(open) => {
+                    if (open) makeRoomBelow(bankTriggerRef.current);
+                    setIsBankListOpen(open);
+                  }}
+                >
+                  {/* `peer` lets the hint below hide while the list covers it (see Field) */}
+                  <SelectTrigger ref={bankTriggerRef} id="bankDetails" aria-describedby="bankDetails-hint" className="peer">
+                    <SelectValue placeholder="Choose bank details..." />
+                  </SelectTrigger>
+                  {/* Always opens downwards so the list never covers the field's label */}
+                  <SelectContent
+                    side="bottom"
+                    avoidCollisions={false}
+                    className="max-h-[min(var(--radix-select-content-available-height),380px)] w-(--radix-select-trigger-width)"
+                  >
+                    <SelectGroup>
+                      <SelectLabel>Charities · {invoiceData.currency}</SelectLabel>
+                      {currentBankDetails.map((details) => (
+                        <SelectItem key={details.name} value={details.name} description={describeBankDetails(details)}>
+                          {details.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    <SelectSeparator />
+                    <SelectItem
+                      value="random"
+                      icon={<Shuffle />}
+                      description="Fake company name with made-up account numbers"
+                    >
+                      Generate random invalid
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
 
-        <Separator />
+              {isEURCurrency(invoiceData.currency) ? (
+                <div className="grid grid-cols-1 gap-x-3 gap-y-(--row-gap)">
+                  {renderTextField('iban', 'IBAN')}
+                  {renderTextField('accountName', 'Account name')}
+                </div>
+              ) : isUSDCurrency(invoiceData.currency) ? (
+                <div className="grid grid-cols-1 gap-x-3 gap-y-(--row-gap) @bank-row:grid-cols-[minmax(0,1fr)_10.5rem]">
+                  {renderTextField('iban', 'IBAN')}
+                  {renderTextField('swiftBic', 'Swift/BIC')}
+                  {renderTextField('accountName', 'Account name', { className: '@bank-row:col-span-2' })}
+                </div>
+              ) : (
+                // Sort code and account number are fixed-length, so the account name gets the rest of the row
+                <div className="grid grid-cols-2 gap-x-3 gap-y-(--row-gap) @bank-row:grid-cols-[6rem_6.5rem_minmax(0,1fr)]">
+                  {renderTextField('sortCode', 'Sort code')}
+                  {renderTextField('accountNumber', 'Account number')}
+                  {renderTextField('accountName', 'Account name', { className: 'col-span-2 @bank-row:col-span-1' })}
+                </div>
+              )}
+            </div>
+          </FormSection>
 
-        <Card style={{ padding: '10px' }}>
-          <Flex direction="column" gap="3">
-            <Flex 
-              justify="between" 
-              align="center"
-              style={{ cursor: 'pointer' }}
-              onClick={() => setIsItemsExpanded(!isItemsExpanded)}
-            >
-              <Flex align="center" gap="2">
-                <CubeIcon width="18" height="18" />
-                <Text size="4" weight="bold">Invoice Items</Text>
-              </Flex>
-              <ChevronDownIcon 
-                width="20" 
-                height="20" 
-                style={{ transform: isItemsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} 
-              />
-            </Flex>
-            
-            {isItemsExpanded && (
-              <Flex direction="column" gap="2">
+          <FormSection title="Line items" description="Two items on the invoice. VAT at 20% is added to the total.">
+            {/* Wide columns: one table-like grid. The header and rows share its columns (subgrid), so the
+                Amount column can grow to fit a large typed-in amount and everything stays aligned. */}
+            <div className="@item-row:grid @item-row:grid-cols-[minmax(0,1fr)_3.875rem_7.375rem_minmax(5rem,max-content)] @item-row:gap-x-2">
+              <div
+                aria-hidden="true"
+                className="hidden pb-2 text-[13px] leading-none text-foreground/70 @item-row:col-span-full @item-row:grid @item-row:grid-cols-subgrid"
+              >
+                <span>Description</span>
+                <span className="text-right">Qty</span>
+                <span className="text-right">Unit price</span>
+                <span className="text-right">Amount</span>
+              </div>
+              <ul className="flex flex-col gap-y-4 @item-row:col-span-full @item-row:grid @item-row:grid-cols-subgrid @item-row:gap-y-2">
                 {items.map((item, index) => (
-                  <InvoiceItemCard
+                  <LineItemRow
                     key={index}
+                    index={index}
                     item={item}
-                    currency={invoiceData.currency}
+                    currencySymbol={currencySymbol}
                     onUpdate={(field, value) => updateItem(index, field, value)}
                   />
                 ))}
-              </Flex>
-            )}
-          </Flex>
-        </Card>
+              </ul>
+            </div>
 
-        <Separator />
+            <dl className="mt-6 border-t pt-4 text-sm">
+              <div className="flex items-baseline justify-between py-1">
+                <dt className="text-muted-foreground">Subtotal</dt>
+                <dd className="tabular-nums">{formatAmount(totalAmount, currencySymbol)}</dd>
+              </div>
+              <div className="flex items-baseline justify-between py-1">
+                <dt className="text-muted-foreground">VAT (20%)</dt>
+                <dd className="tabular-nums">{formatAmount(totalAmount * 0.2, currencySymbol)}</dd>
+              </div>
+              <div className="mt-3 flex items-baseline justify-between border-t pt-4">
+                <dt className="text-[17px] font-normal text-foreground/80">Total incl. VAT</dt>
+                <dd>
+                  <Amount value={totalAmount * 1.2} symbol={currencySymbol} className="text-[26px] leading-none font-normal tracking-[-0.02em]" />
+                </dd>
+              </div>
+            </dl>
+          </FormSection>
+        </div>
 
-        <Text size="4" weight="bold">
-          Total: {(() => {
-            const currency = getCurrencyByCode(invoiceData.currency);
-            const symbol = currency?.symbol || '£';
-            return `${symbol}${(totalAmount * 1.2).toFixed(2)} (inc. VAT)`;
-          })()}
-        </Text>
-      </Flex>
-    </Card>
+        {/* Desktop: the form fades out just above the action bar, so a section divider can't sit right on the
+            bar's border as a second line. It sticks to the bottom while more of the form is below; at the end
+            it lies over the bottom padding, so nothing is faded there. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none sticky bottom-0 -mt-6 hidden h-6 bg-linear-to-t from-background to-transparent lg:block"
+        />
+      </div>
+
+      {/* Desktop: Mercury-style action bar pinned under the scrolling form, outside the scroll area. It casts a
+          soft shadow up over the form while more of the form is hidden below it. `relative` paints the
+          shadow above the form's content. */}
+      <div
+        data-content-below={hasContentBelow || undefined}
+        className="relative hidden border-t bg-background transition-shadow duration-200 data-content-below:shadow-bar lg:block lg:[scrollbar-gutter:stable] lg:overflow-hidden"
+      >
+        <div className="mx-auto flex w-full max-w-[600px] justify-end gap-2 px-8 py-(--bar-py)">
+          <FormActions onGenerate={onGenerate} onDownload={onDownload} pdfBlob={pdfBlob} />
+        </div>
+      </div>
+    </section>
   );
 };
 
-interface InvoiceItemCardProps {
+interface FormActionsProps {
+  onGenerate: (preserveBankDetails?: boolean) => void;
+  onDownload: () => void;
+  pdfBlob: Blob | null;
+}
+
+const FormActions = ({ onGenerate, onDownload, pdfBlob }: FormActionsProps) => (
+  <>
+    <Button variant="secondary" onClick={() => onGenerate(true)} className="short:h-9 sm:has-[kbd]:pr-2.5">
+      <RefreshCw data-icon="inline-start" />
+      Regenerate data
+      <Kbd className="ml-1 hidden bg-foreground/[0.07] sm:inline-flex">R</Kbd>
+    </Button>
+    <Button onClick={onDownload} disabled={!pdfBlob} className="short:h-9 sm:has-[kbd]:pr-2.5">
+      <Download data-icon="inline-start" />
+      Download PDF
+      <Kbd className="ml-1 hidden bg-primary-foreground/15 text-primary-foreground/75 sm:inline-flex">D</Kbd>
+    </Button>
+  </>
+);
+
+// The bank list always opens downwards so it never covers the field's label. When the field sits near the
+// bottom of the screen, scroll its container just enough first to leave room for a useful list.
+const BANK_LIST_ROOM = 300;
+
+const makeRoomBelow = (trigger: HTMLElement | null) => {
+  if (!trigger) return;
+  const shortfall = BANK_LIST_ROOM - (window.innerHeight - trigger.getBoundingClientRect().bottom);
+  if (shortfall <= 0) return;
+
+  let scroller = trigger.parentElement;
+  while (scroller && !/auto|scroll/.test(getComputedStyle(scroller).overflowY)) {
+    scroller = scroller.parentElement;
+  }
+  (scroller ?? document.scrollingElement)?.scrollBy({ top: shortfall });
+};
+
+// Secondary line under each bank option, like account numbers in Mercury's pickers
+const describeBankDetails = (details: BankDetails): string => {
+  if (details.sortCode) return `${details.sortCode} · ${details.accountNumber}`;
+  if (details.swiftBic) return `${details.iban} · ${details.swiftBic}`;
+  return details.iban || '';
+};
+
+interface FormSectionProps {
+  title: string;
+  description: string;
+  children: ReactNode;
+}
+
+// The description is dropped on short laptop screens so Invoice and Bank details fit above the action bar
+const FormSection = ({ title, description, children }: FormSectionProps) => (
+  <section className="mt-(--section-gap) border-t pt-(--section-gap)">
+    <h3 className="text-[15px] leading-tight font-medium">{title}</h3>
+    <p className="mt-1 text-[13px] text-muted-foreground short:hidden">{description}</p>
+    <div className="mt-4 short:mt-3">{children}</div>
+  </section>
+);
+
+interface FieldProps {
+  id: string;
+  label: string;
+  // Rendered under the control with id `${id}-hint`; point the control's aria-describedby at it
+  hint?: string;
+  className?: string;
+  children: ReactNode;
+}
+
+const Field = ({ id, label, hint, className, children }: FieldProps) => (
+  <div className={cn('flex min-w-0 flex-col gap-2 short:gap-1.5', className)}>
+    <Label htmlFor={id} className="text-[13px] leading-none font-normal whitespace-nowrap text-foreground/70">{label}</Label>
+    {children}
+    {/* Hidden while an open select list covers it, so its first letter can't peek out at the list's rounded corner */}
+    {hint && <p id={`${id}-hint`} className="text-xs leading-snug text-muted-foreground peer-data-[state=open]:invisible">{hint}</p>}
+  </div>
+);
+
+interface LineItemRowProps {
+  index: number;
   item: InvoiceItem;
-  currency: string;
+  currencySymbol: string;
   onUpdate: (field: keyof InvoiceItem, value: string | number) => void;
 }
 
-const InvoiceItemCard = ({ item, currency, onUpdate }: InvoiceItemCardProps) => (
-  <Card style={{ padding: '10px' }}>
-    <Grid columns="4" gap="2" align="end">
-      <Box>
-        <Text size="2" weight="bold">Description</Text>
-        <TextField.Root
-          size="1"
+// px-2 rather than the inputs' px-3, so a 4-digit quantity and a price like 12345.67 fit their columns
+const numberInputClass = 'px-2 text-right tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+
+const LineItemRow = ({ index, item, currencySymbol, onUpdate }: LineItemRowProps) => {
+  const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
+  const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
+  const prefix = `item-${index}`;
+
+  // Narrow columns stack each item: the description on its own row, then Qty / Unit price / Amount with labels
+  return (
+    <li className="grid grid-cols-[4.5rem_minmax(0,1fr)_minmax(0,1fr)] items-end gap-2 @item-row:col-span-full @item-row:grid-cols-subgrid @item-row:items-center">
+      <div className="col-span-3 flex flex-col gap-2 @item-row:col-span-1">
+        <Label htmlFor={`${prefix}-description`} className="text-[13px] leading-none font-normal text-foreground/70 @item-row:sr-only">
+          Item {index + 1}
+        </Label>
+        <Input
+          id={`${prefix}-description`}
           value={item.description}
           onChange={(e) => onUpdate('description', e.target.value)}
           placeholder="Enter description"
+          autoComplete="off"
         />
-      </Box>
-      <Box>
-        <Text size="2" weight="bold">Qty</Text>
-        <TextField.Root
-          size="1"
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={`${prefix}-quantity`} className="text-xs leading-none font-normal text-muted-foreground @item-row:sr-only">Qty</Label>
+        <Input
+          id={`${prefix}-quantity`}
           type="number"
           value={item.quantity}
           onChange={(e) => onUpdate('quantity', e.target.value)}
           placeholder="1"
+          className={numberInputClass}
         />
-      </Box>
-      <Box>
-        <Text size="2" weight="bold">Unit Price</Text>
-        <TextField.Root
-          size="1"
-          type="number"
-          value={item.unitPrice}
-          onChange={(e) => onUpdate('unitPrice', e.target.value)}
-          placeholder="0.00"
-        />
-      </Box>
-      <Box >
-        <Text size="2" weight="bold">Total</Text><br/>
-        <Text size="1" weight="medium">{(() => {
-          const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
-          const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
-          const currencyInfo = getCurrencyByCode(currency);
-          const symbol = currencyInfo?.symbol || '£';
-          return `${symbol}${(quantity * unitPrice).toFixed(2)}`;
-        })()}</Text>
-      </Box >
-    </Grid>
-  </Card>
-);
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={`${prefix}-unit-price`} className="text-xs leading-none font-normal text-muted-foreground @item-row:sr-only">Unit price</Label>
+        <div className="relative">
+          <span aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
+            {currencySymbol}
+          </span>
+          <Input
+            id={`${prefix}-unit-price`}
+            type="number"
+            value={item.unitPrice}
+            onChange={(e) => onUpdate('unitPrice', e.target.value)}
+            placeholder="0.00"
+            className={cn(numberInputClass, 'pl-7')}
+          />
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        <span className="text-right text-xs leading-none text-muted-foreground @item-row:sr-only">Amount</span>
+        <span className="flex h-(--field-h) items-center justify-end text-sm whitespace-nowrap tabular-nums">
+          {formatAmount(quantity * unitPrice, currencySymbol)}
+        </span>
+      </div>
+    </li>
+  );
+};

@@ -1,19 +1,224 @@
-/* Minimal reset styles */
-* {
-  box-sizing: border-box;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter';
+
+@custom-variant dark (&:is(.dark *));
+
+/* Short desktop screens (laptop viewports up to 880px tall): the form tightens so Invoice and Bank details fit */
+@custom-variant short {
+  @media (min-width: 1024px) and (max-height: 880px) {
+    @slot;
+  }
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Keyboard focus ring: :focus-visible, but not right after a mouse or touch interaction
+   (see src/lib/inputModality.ts). Text inputs keep plain :focus-visible. */
+@custom-variant keyboard-focus (&:focus-visible:where(:root:not([data-input='pointer']) *));
+
+/* shadcn/ui state variants (inlined from shadcn/tailwind.css) */
+@custom-variant data-open {
+  &:where([data-state='open']),
+  &:where([data-open]:not([data-open='false'])) {
+    @slot;
+  }
 }
 
-#root {
-  height: 100vh;
-  width: 100vw;
+@custom-variant data-closed {
+  &:where([data-state='closed']),
+  &:where([data-closed]:not([data-closed='false'])) {
+    @slot;
+  }
+}
+
+@custom-variant data-disabled {
+  &:where([data-disabled='true']),
+  &:where([data-disabled]:not([data-disabled='false'])) {
+    @slot;
+  }
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-field: var(--field);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* Form column widths (its @container, inside the padding) where a row of fields fits side by side.
+   Narrower columns (phones, and the side-by-side desktop layout on smaller laptops) stack the fields
+   instead of cutting values off. */
+@theme {
+  /* GBP sort code (6rem) + account number (6.5rem) + two gaps leave the account name at least 232px,
+     enough for the default "British Heart Foundation (BHF)"; USD's IBAN keeps 276px next to Swift/BIC */
+  --container-bank-row: 28.5rem;
+  /* Qty (62px: room for 4 digits) + unit price (118px: room for 12345.67) + amount (at least 80px: the
+     largest generated amount, 5000.00) + three gaps take 284px, leaving the description at least 252px:
+     the longest generated product name ("Handcrafted Aluminum Computer") needs 248px */
+  --container-item-row: 33.5rem;
+}
+
+/* Black-and-white palette: neutral greys only, no accent hue */
+:root {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #fafafa;
+  --secondary: #f1f1f1;
+  --secondary-foreground: #0a0a0a;
+  --muted-foreground: #737373;
+  --accent: #f3f3f3;
+  --accent-foreground: #0a0a0a;
+  --border: #ebebeb;
+  --input: #e2e2e2;
+  --field: #fafafa;
+  --ring: #0a0a0a;
+  --canvas: #f6f5f4;
+  --scrollbar: rgb(0 0 0 / 0.16);
+  /* Soft pastel haze behind the invoice (after Luma's sign-in page): peach in the middle, pink and lilac low
+     on the left, cream up top, mint on the right */
+  --canvas-gradient:
+    radial-gradient(55% 45% at 55% 62%, rgb(250 218 198 / 0.7) 0%, rgb(250 218 198 / 0) 100%),
+    radial-gradient(55% 45% at 18% 90%, rgb(242 212 234 / 0.85) 0%, rgb(242 212 234 / 0) 100%),
+    radial-gradient(45% 40% at 15% 25%, rgb(250 239 212 / 0.75) 0%, rgb(250 239 212 / 0) 100%),
+    radial-gradient(40% 50% at 100% 40%, rgb(212 237 235 / 0.8) 0%, rgb(212 237 235 / 0) 100%),
+    radial-gradient(50% 40% at 85% 100%, rgb(232 220 246 / 0.7) 0%, rgb(232 220 246 / 0) 100%);
+  --sheet-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.04),
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 16px 40px -12px rgb(0 0 0 / 0.14);
+  --bar-shadow: 0 -10px 24px -12px rgb(0 0 0 / 0.14);
+
+  /* Layout density */
+  --header-h: 4rem;
+  --field-h: 2.5rem;
+  --row-gap: 1rem;
+  --section-gap: 1.5rem;
+  --bar-py: 1rem;
+}
+
+@media (min-width: 1024px) and (max-height: 880px) {
+  :root {
+    --header-h: 3.5rem;
+    --field-h: 2.25rem;
+    --row-gap: 0.75rem;
+    --section-gap: 1rem;
+    --bar-py: 0.75rem;
+  }
+}
+
+.dark {
+  --background: #111111;
+  --foreground: #f4f4f4;
+  --popover: #1a1a1a;
+  --popover-foreground: #f4f4f4;
+  --primary: #f4f4f4;
+  --primary-foreground: #0a0a0a;
+  --secondary: #222222;
+  --secondary-foreground: #f4f4f4;
+  --muted-foreground: #8f8f8f;
+  --accent: #262626;
+  --accent-foreground: #f4f4f4;
+  --border: rgb(255 255 255 / 0.08);
+  --input: rgb(255 255 255 / 0.1);
+  --field: rgb(255 255 255 / 0.035);
+  --ring: #f4f4f4;
+  --canvas: #0d0d0e;
+  --scrollbar: rgb(255 255 255 / 0.16);
+  /* The same haze, deep and low-key: amber, plum, bronze, teal and violet glows on near-black */
+  --canvas-gradient:
+    radial-gradient(55% 45% at 55% 62%, rgb(122 70 44 / 0.32) 0%, rgb(122 70 44 / 0) 100%),
+    radial-gradient(55% 45% at 18% 90%, rgb(112 52 96 / 0.36) 0%, rgb(112 52 96 / 0) 100%),
+    radial-gradient(45% 40% at 15% 25%, rgb(104 86 48 / 0.22) 0%, rgb(104 86 48 / 0) 100%),
+    radial-gradient(40% 50% at 100% 40%, rgb(38 96 96 / 0.3) 0%, rgb(38 96 96 / 0) 100%),
+    radial-gradient(50% 40% at 85% 100%, rgb(78 62 124 / 0.28) 0%, rgb(78 62 124 / 0) 100%);
+  --sheet-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 20px 48px -16px rgb(0 0 0 / 0.7);
+  --bar-shadow: 0 -10px 24px -12px rgb(0 0 0 / 0.8);
+}
+
+@utility bg-canvas-gradient {
+  background-color: var(--canvas);
+  background-image: var(--canvas-gradient);
+}
+
+@utility shadow-sheet {
+  box-shadow: var(--sheet-shadow);
+}
+
+/* Desktop action bar while more of the form is hidden below it */
+@utility shadow-bar {
+  box-shadow: var(--bar-shadow);
+}
+
+/* Thin scrollbar in the theme's grey, for the scrolling form column */
+@utility scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar) transparent;
+
+  /* Safari ignores scrollbar-color */
+  @supports not (scrollbar-color: auto) {
+    &::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border: 3px solid transparent;
+      border-radius: 9999px;
+      background: var(--scrollbar) padding-box;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Tailwind v4 preflight resets buttons to cursor: default */
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  [role='menuitem'],
+  [role='menuitemradio'],
+  [role='option'],
+  a[href] {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--foreground) 14%, transparent);
+  }
 }
