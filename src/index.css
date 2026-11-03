@@ -1,19 +1,185 @@
-/* Minimal reset styles */
-* {
-  box-sizing: border-box;
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter/opsz.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* shadcn/ui state variants (inlined from shadcn/tailwind.css) */
+@custom-variant data-open {
+  &:where([data-state="open"]),
+  &:where([data-open]:not([data-open="false"])) {
+    @slot;
+  }
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@custom-variant data-closed {
+  &:where([data-state="closed"]),
+  &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
 }
 
-#root {
-  height: 100vh;
-  width: 100vw;
+@custom-variant data-checked {
+  &:where([data-state="checked"]),
+  &:where([data-checked]:not([data-checked="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-disabled {
+  &:where([data-disabled="true"]),
+  &:where([data-disabled]:not([data-disabled="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: var(--font-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-field: var(--field);
+  --color-ring: var(--ring);
+  --color-canvas: var(--canvas);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* Black-and-white palette: neutral greys only, no accent hue */
+:root {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #fafafa;
+  --secondary: #f1f1f1;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f4f4f4;
+  --muted-foreground: #737373;
+  --accent: #f3f3f3;
+  --accent-foreground: #0a0a0a;
+  --destructive: #dc2626;
+  --border: #ebebeb;
+  --input: #e2e2e2;
+  --field: #fafafa;
+  --ring: #0a0a0a;
+  --canvas: #ededed;
+  --scrollbar: rgb(0 0 0 / 0.16);
+  --canvas-gradient:
+    radial-gradient(120% 70% at 85% 0%, rgb(255 255 255 / 0.9) 0%, rgb(255 255 255 / 0) 60%),
+    linear-gradient(180deg, #f4f4f4 0%, #ececec 55%, #e5e5e5 100%);
+  --sheet-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.04),
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 16px 40px -12px rgb(0 0 0 / 0.14);
+}
+
+.dark {
+  --background: #111111;
+  --foreground: #f4f4f4;
+  --card: #171717;
+  --card-foreground: #f4f4f4;
+  --popover: #1a1a1a;
+  --popover-foreground: #f4f4f4;
+  --primary: #f4f4f4;
+  --primary-foreground: #0a0a0a;
+  --secondary: #222222;
+  --secondary-foreground: #f4f4f4;
+  --muted: #1c1c1c;
+  --muted-foreground: #8f8f8f;
+  --accent: #262626;
+  --accent-foreground: #f4f4f4;
+  --destructive: #f87171;
+  --border: rgb(255 255 255 / 0.08);
+  --input: rgb(255 255 255 / 0.1);
+  --field: rgb(255 255 255 / 0.035);
+  --ring: #f4f4f4;
+  --canvas: #0c0c0c;
+  --scrollbar: rgb(255 255 255 / 0.16);
+  --canvas-gradient:
+    radial-gradient(120% 70% at 85% 0%, rgb(255 255 255 / 0.045) 0%, rgb(255 255 255 / 0) 60%),
+    linear-gradient(180deg, #161616 0%, #101010 55%, #0b0b0b 100%);
+  --sheet-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 20px 48px -16px rgb(0 0 0 / 0.7);
+}
+
+@utility bg-canvas-gradient {
+  background-color: var(--canvas);
+  background-image: var(--canvas-gradient);
+}
+
+@utility shadow-sheet {
+  box-shadow: var(--sheet-shadow);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    color-scheme: light;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-optical-sizing: auto;
+  }
+
+  /* Tailwind v4 preflight resets buttons to cursor: default */
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  [role='menuitem'],
+  [role='menuitemradio'],
+  [role='option'],
+  a[href] {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--foreground) 14%, transparent);
+  }
 }

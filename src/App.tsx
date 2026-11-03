@@ -1,12 +1,26 @@
 import { useState, useEffect } from 'react';
-import { Theme, Container, Flex, Text, Box, DropdownMenu, IconButton } from '@radix-ui/themes';
-import { SunIcon, MoonIcon, DesktopIcon, CheckIcon } from '@radix-ui/react-icons';
+import { ArrowUpRight, Monitor, Moon, Star, Sun } from 'lucide-react';
 import { InvoiceForm, PDFPreview } from './components';
+import { Logo } from './components/Logo';
 import { generateFakeInvoice, generatePDFBlob, downloadPDF } from './utils';
 import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from './types/invoice';
-import './App.css';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type ThemePreference = 'system' | 'light' | 'dark';
+
+const themeOptions = [
+  { value: 'system', label: 'System', Icon: Monitor },
+  { value: 'light', label: 'Light', Icon: Sun },
+  { value: 'dark', label: 'Dark', Icon: Moon },
+] as const;
 
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window !== 'undefined' && window.matchMedia) {
@@ -59,6 +73,11 @@ function App() {
       setResolvedTheme(themePreference);
     }
   }, [themePreference]);
+
+  // Apply the theme the shadcn way: a .dark class on <html>
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+  }, [resolvedTheme]);
 
   // Generate invoice on component mount
   useEffect(() => {
@@ -138,97 +157,103 @@ function App() {
     setPdfBlob(blob);
   };
 
+  const ThemeIcon = themeOptions.find((option) => option.value === themePreference)?.Icon ?? Monitor;
+
   return (
-    <Theme appearance={resolvedTheme}>
+    <div className="flex min-h-dvh flex-col lg:h-dvh">
       {/* GitHub Star Banner */}
       {!bannerDismissed && (
         <a 
           href="https://github.com/Danilqa/sample-invoice-generator" 
           target="_blank" 
           rel="noopener noreferrer"
-          className="github-star-banner"
+          className="group flex h-9 shrink-0 items-center justify-center gap-2 bg-[#0a0a0a] px-4 text-[13px] text-white/90 outline-none transition-colors hover:text-white focus-visible:underline dark:border-b dark:border-white/[0.08] dark:bg-[#1a1a1a]"
           onClick={() => {
             localStorage.setItem('banner-dismissed', 'true');
             setBannerDismissed(true);
           }}
         >
-          ⭐️ Support this app by giving it a star on Github
+          <Star className="size-3.5 shrink-0 fill-current" aria-hidden="true" />
+          <span className="truncate">Support this app by giving it a star on GitHub</span>
+          <ArrowUpRight
+            className="size-3.5 shrink-0 opacity-50 transition-[opacity,transform] duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
+            aria-hidden="true"
+          />
         </a>
       )}
       
-      <Container size="4" style={{ height: '100%', padding: '20px', paddingBottom: 0 }}>
-        <Flex justify="between" align="start" mb="4">
-          <Flex align="center" gap="3">
-            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Logo" style={{ width: 40, height: 40 }} />
-            <Box>
-              <Text size="6" weight="bold">Dummy Invoice Generator</Text>
-              <br/>
-              <Text size="1">For development and testing purposes only.</Text>
-            </Box>
-          </Flex>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <IconButton variant="ghost" size="2" style={{ color: resolvedTheme === 'dark' ? 'white' : 'black' }}>
-                {themePreference === 'system' && <DesktopIcon width="18" height="18" />}
-                {themePreference === 'light' && <SunIcon width="18" height="18" />}
-                {themePreference === 'dark' && <MoonIcon width="18" height="18" />}
-              </IconButton>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content align="end">
-              <DropdownMenu.Item onClick={() => setThemePreference('system')}>
-                <DesktopIcon width="16" height="16" />
-                System
-                {themePreference === 'system' && <CheckIcon style={{ marginLeft: 'auto' }} />}
-              </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={() => setThemePreference('light')}>
-                <SunIcon width="16" height="16" />
-                Light
-                {themePreference === 'light' && <CheckIcon style={{ marginLeft: 'auto' }} />}
-              </DropdownMenu.Item>
-              <DropdownMenu.Item onClick={() => setThemePreference('dark')}>
-                <MoonIcon width="16" height="16" />
-                Dark
-                {themePreference === 'dark' && <CheckIcon style={{ marginLeft: 'auto' }} />}
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </Flex>
-        <Flex 
-          direction={{ initial: 'column', md: 'row' }} 
-          gap="4" 
-          style={{ height: '100%' }}
+      <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b px-5 sm:px-8">
+        <div className="flex min-w-0 items-center gap-3">
+          <Logo className="size-7 shrink-0" />
+          <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+            <h1 className="truncate text-[12.5px] leading-none font-semibold tracking-[0.22em] uppercase">
+              Test Invoice Generator
+            </h1>
+            <span aria-hidden="true" className="hidden h-4 w-px bg-border sm:block" />
+            <p className="truncate text-xs leading-none text-muted-foreground sm:text-[13px]">
+              For development and testing purposes only
+            </p>
+          </div>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Change theme" className="text-foreground/70">
+              <ThemeIcon className="size-[18px]" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" sideOffset={6} className="w-44">
+            <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={themePreference}
+              onValueChange={(value) => setThemePreference(value as ThemePreference)}
+            >
+              {themeOptions.map(({ value, label, Icon }) => (
+                <DropdownMenuRadioItem key={value} value={value}>
+                  <Icon className="text-muted-foreground" />
+                  {label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </header>
+
+      <main className="flex flex-1 flex-col lg:min-h-0 lg:flex-row">
+        <InvoiceForm
+          invoiceData={invoiceData}
+          onGenerate={handleGenerate}
+          onDownload={handleDownload}
+          pdfBlob={pdfBlob}
+          onUpdateItems={handleUpdateItems}
+          onUpdateBankDetails={handleUpdateBankDetails}
+          onUpdateField={handleUpdateField}
+        />
+
+        <section
+          aria-label="Invoice preview"
+          className="bg-canvas-gradient flex flex-1 flex-col border-t px-4 pt-6 pb-5 sm:px-8 lg:min-h-0 lg:border-t-0 lg:px-10 lg:pt-7"
         >
-          <InvoiceForm 
-            invoiceData={invoiceData}
-            onGenerate={handleGenerate}
-            onDownload={handleDownload}
-            pdfBlob={pdfBlob}
-            onUpdateItems={handleUpdateItems}
-            onUpdateBankDetails={handleUpdateBankDetails}
-            onUpdateField={handleUpdateField}
-          />
           <PDFPreview 
             invoiceData={invoiceData}
             pdfBlob={pdfBlob}
           />
-        </Flex>
         
-        {/* Footer */}
-        <Box mt="2" style={{ textAlign: 'center' }}>
-          <Text size="2" color="gray">
+          {/* Footer */}
+          <footer className="pt-4 text-center text-xs text-muted-foreground">
             Vibe-coded with 💛 by{' '}
             <a 
               href="https://github.com/Danilqa/" 
               target="_blank" 
               rel="noopener noreferrer"
-              style={{ color: 'inherit', textDecoration: 'underline' }}
+              className="text-foreground/80 underline decoration-foreground/25 underline-offset-[3px] transition-colors hover:text-foreground hover:decoration-foreground/60"
             >
               Dan
             </a>
-          </Text>
-        </Box>
-      </Container>
-    </Theme>
+          </footer>
+        </section>
+      </main>
+    </div>
   );
 }
 

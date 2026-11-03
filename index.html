@@ -3,8 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dummy Invoice Generator</title>
+    <meta name="description" content="Generate realistic fake UK, EU and US invoices as PDFs for development and testing." />
+    <title>Test Invoice Generator</title>
+    <script>
+      // Apply the saved theme before first paint to avoid a light/dark flash
+      (function () {
+        try {
+          var preference = localStorage.getItem('theme-preference');
+          var dark = preference === 'dark' ||
+            (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
