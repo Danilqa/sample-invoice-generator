@@ -1,139 +1,102 @@
-import { Document, Page, Text as PDFText, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Font, Page, Text as PDFText, View, StyleSheet } from '@react-pdf/renderer';
+import inter400 from '@fontsource/inter/files/inter-latin-400-normal.woff';
+import inter500 from '@fontsource/inter/files/inter-latin-500-normal.woff';
+import inter600 from '@fontsource/inter/files/inter-latin-600-normal.woff';
 import type { InvoiceData } from '../types/invoice';
 import { getCurrencyByCode } from '../utils/currencies';
+import { formatAmount } from '@/lib/format';
 
-// PDF Styles
+// Static weights: react-pdf can't pick a weight out of the variable font the app uses
+Font.register({
+  family: 'Inter',
+  fonts: [
+    { src: inter400, fontWeight: 400 },
+    { src: inter500, fontWeight: 500 },
+    { src: inter600, fontWeight: 600 },
+  ],
+});
+// Keep names, emails and IBANs whole instead of hyphenating them across lines
+Font.registerHyphenationCallback((word) => [word]);
+
+const INK = '#0a0a0a';
+const MUTED = '#737373';
+const HAIRLINE = '#e5e5e5';
+const VAT_RATE = 0.2;
+
 const pdfStyles = StyleSheet.create({
   page: {
-    flexDirection: 'column',
-    backgroundColor: '#ffffff',
-    padding: 30,
-    fontSize: 12,
+    fontFamily: 'Inter',
+    fontSize: 9,
+    lineHeight: 1.45,
+    color: INK,
+    paddingTop: 52,
+    paddingHorizontal: 52,
+    paddingBottom: 72,
   },
-  header: {
+  row: { flexDirection: 'row' },
+  header: { flexDirection: 'row', justifyContent: 'space-between' },
+  companyName: { fontWeight: 600 },
+  muted: { color: MUTED },
+  amountLabel: { marginTop: 48, color: MUTED },
+  amountDue: { fontSize: 44, fontWeight: 600, letterSpacing: -1.5, lineHeight: 1.1 },
+  dueDate: { marginTop: 4, color: MUTED },
+  parties: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 30,
+    marginTop: 36,
+    paddingTop: 18,
+    borderTopWidth: 0.5,
+    borderTopColor: HAIRLINE,
   },
-  companyInfo: {
-    flexDirection: 'column',
-  },
-  invoiceInfo: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#1f2937',
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#374151',
-  },
-  text: {
-    marginBottom: 3,
-    color: '#4b5563',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  // Standard UK Bill Bank Details Section
-  bankDetailsSection: {
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: '#000000',
-    padding: 15,
-    backgroundColor: '#ffffff',
-  },
-  bankDetailsTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#000000',
-    textAlign: 'left',
-  },
-  bankDetailsRow: {
-    flexDirection: 'row',
-    marginBottom: 5,
-  },
-  bankDetailsLabel: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#000000',
-    width: '25%',
-  },
-  bankDetailsValue: {
-    fontSize: 12,
-    fontWeight: 'normal',
-    color: '#000000',
-    width: '75%',
-    fontFamily: 'Helvetica',
-  },
-  bankDetailsBox: {
-    borderWidth: 1,
-    borderColor: '#000000',
-    padding: 8,
-    marginTop: 10,
-    backgroundColor: '#f9f9f9',
-  },
-  bankDetailsBoxTitle: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#000000',
-  },
-  bankDetailsBoxText: {
-    fontSize: 12,
-    color: '#000000',
-    marginBottom: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    paddingVertical: 8,
-    paddingHorizontal: 5,
-  },
-  headerRow: {
-    backgroundColor: '#f3f4f6',
-    fontWeight: 'bold',
-  },
-  col1: { width: '40%' },
-  col2: { width: '20%', textAlign: 'center' },
-  col3: { width: '20%', textAlign: 'center' },
-  col4: { width: '20%', textAlign: 'right' },
-  totalSection: {
-    marginTop: 20,
-    alignItems: 'flex-end',
-  },
-  totalRow: {
-    flexDirection: 'row',
-    marginBottom: 5,
-  },
-  totalLabel: {
-    width: 100,
-    textAlign: 'right',
-    marginRight: 10,
-    fontWeight: 'bold',
-  },
-  totalValue: {
-    width: 80,
-    textAlign: 'right',
-    fontWeight: 'bold',
-  },
-  footer: {
-    marginTop: 40,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    textAlign: 'center',
-    color: '#6b7280',
-  },
+  party: { flex: 1, paddingRight: 16 },
+  dates: { width: 110 },
+  label: { color: MUTED, marginBottom: 4 },
+  secondLabel: { color: MUTED, marginTop: 8, marginBottom: 4 },
+  items: { marginTop: 32 },
+  itemsHeader: { flexDirection: 'row', paddingBottom: 6, borderBottomWidth: 0.5, borderBottomColor: HAIRLINE, color: MUTED },
+  itemRow: { flexDirection: 'row', paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: HAIRLINE },
+  description: { flex: 1, paddingRight: 12 },
+  quantity: { width: 50, textAlign: 'right' },
+  price: { width: 80, textAlign: 'right' },
+  totals: { marginLeft: '55%', marginTop: 10 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3 },
+  subtotalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3, color: MUTED },
+  grandTotal: { fontWeight: 600 },
+  payment: { marginTop: 32, backgroundColor: '#f5f5f5', borderRadius: 8, padding: 16 },
+  paymentTitle: { fontWeight: 600 },
+  paymentFields: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 },
+  paymentField: { width: '50%', marginBottom: 8, paddingRight: 12 },
+  paymentValue: { fontWeight: 500 },
+  disclaimer: { position: 'absolute', bottom: 34, left: 52, right: 52, color: MUTED, fontSize: 8 },
 });
+
+// DD/MM/YYYY (the form's format) → 30 November 2026; anything else is printed as typed
+const toLongDate = (value: string) => {
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(value.trim());
+  if (!match) return value;
+  const [, day, month, year] = match.map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCMonth() !== month - 1) return value;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+};
+
+// The account fields each currency is paid by, as on a UK bill
+const toPaymentFields = (data: InvoiceData): [string, string][] => {
+  const accountFields: [string, string][] =
+    data.currency === 'EUR'
+      ? [['IBAN', data.iban]]
+      : data.currency === 'USD'
+        ? [['IBAN', data.iban], ['SWIFT/BIC', data.swiftBic]]
+        : [['Sort code', data.sortCode], ['Account number', data.accountNumber]];
+  return [['Account name', data.accountName], ...accountFields, ['Reference', data.invoiceNumber]];
+};
+
+const Lines = ({ lines }: { lines: string[] }) => (
+  <>
+    {lines.filter(Boolean).map((line, index) => (
+      <PDFText key={index}>{line}</PDFText>
+    ))}
+  </>
+);
 
 interface InvoicePDFProps {
   data: InvoiceData;
@@ -151,156 +114,104 @@ export const InvoicePDF = ({ data }: InvoicePDFProps) => {
     );
   }
 
+  const symbol = getCurrencyByCode(data.currency || 'GBP')?.symbol || '£';
+  const toMoney = (value: number) => formatAmount(value, symbol);
+  const lines = data.items.map((item) => {
+    const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
+    const unitPrice = item.unitPrice === '' ? 0 : item.unitPrice;
+    return { description: item.description, quantity, unitPrice, amount: quantity * unitPrice };
+  });
+  const subtotal = lines.reduce((sum, line) => sum + line.amount, 0);
+  const vat = subtotal * VAT_RATE;
+  const total = subtotal + vat;
+  const issueDate = toLongDate(data.issueDate);
+  const dueDate = toLongDate(data.dueDate);
+
   return (
-  <Document>
-    <Page size="A4" style={pdfStyles.page}>
-      {/* Header */}
-      <View style={pdfStyles.header}>
-        <View style={pdfStyles.companyInfo}>
-          <PDFText style={pdfStyles.title}>{data.companyName}</PDFText>
+    <Document title={`Invoice ${data.invoiceNumber}`} author={data.companyName}>
+      <Page size="A4" style={pdfStyles.page}>
+        <View style={pdfStyles.header}>
+          <PDFText style={pdfStyles.companyName}>{data.companyName}</PDFText>
+          <PDFText style={pdfStyles.muted}>Invoice {data.invoiceNumber}</PDFText>
         </View>
-        <View style={pdfStyles.invoiceInfo}>
-          <PDFText style={pdfStyles.subtitle}>INVOICE</PDFText>
-          <PDFText style={pdfStyles.text}>Invoice #: {data.invoiceNumber}</PDFText>
-          <PDFText style={pdfStyles.text}>Issue Date: {data.issueDate}</PDFText>
-          <PDFText style={pdfStyles.text}>Due Date: {data.dueDate}</PDFText>
+
+        <PDFText style={pdfStyles.amountLabel}>Amount due</PDFText>
+        <PDFText style={pdfStyles.amountDue}>{toMoney(total)}</PDFText>
+        <PDFText style={pdfStyles.dueDate}>Due {dueDate}</PDFText>
+
+        <View style={pdfStyles.parties}>
+          <View style={pdfStyles.party}>
+            <PDFText style={pdfStyles.label}>Billed to</PDFText>
+            <Lines lines={[data.clientName, data.clientAddress, data.clientEmail]} />
+          </View>
+          <View style={pdfStyles.party}>
+            <PDFText style={pdfStyles.label}>From</PDFText>
+            <Lines
+              lines={[
+                data.companyName,
+                data.companyAddress,
+                data.companyEmail,
+                data.companyPhone,
+                data.companyVatNumber && `VAT ${data.companyVatNumber}`,
+              ]}
+            />
+          </View>
+          <View style={pdfStyles.dates}>
+            <PDFText style={pdfStyles.label}>Issued</PDFText>
+            <PDFText>{issueDate}</PDFText>
+            <PDFText style={pdfStyles.secondLabel}>Due</PDFText>
+            <PDFText>{dueDate}</PDFText>
+          </View>
         </View>
-      </View>
 
-      {/* Client Information */}
-      <View style={pdfStyles.section}>
-        <PDFText style={pdfStyles.subtitle}>Bill To:</PDFText>
-        <PDFText style={pdfStyles.text}>{data.clientName}</PDFText>
-        <PDFText style={pdfStyles.text}>{data.clientAddress}</PDFText>
-        <PDFText style={pdfStyles.text}>{data.clientEmail}</PDFText>
-      </View>
-
-      <View style={{ marginVertical: 20, height: 1, backgroundColor: '#e5e7eb' }} />
-
-      {/* Items Table */}
-      <View style={pdfStyles.section}>
-        <View style={[pdfStyles.row, pdfStyles.headerRow]}>
-          <PDFText style={pdfStyles.col1}>Description</PDFText>
-          <PDFText style={pdfStyles.col2}>Quantity</PDFText>
-          <PDFText style={pdfStyles.col3}>Unit Price</PDFText>
-          <PDFText style={pdfStyles.col4}>Total</PDFText>
-        </View>
-        {data.items.map((item, index) => {
-          const currency = getCurrencyByCode(data.currency || 'GBP');
-          const symbol = currency?.symbol || '£';
-          return (
-            <View key={index} style={pdfStyles.row}>
-              <PDFText style={pdfStyles.col1}>{item.description}</PDFText>
-              <PDFText style={pdfStyles.col2}>{item.quantity === '' || item.quantity === 0 ? 1 : item.quantity}</PDFText>
-              <PDFText style={pdfStyles.col3}>{symbol}{(item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice).toFixed(2)}</PDFText>
-              <PDFText style={pdfStyles.col4}>{symbol}{item.total.toFixed(2)}</PDFText>
+        <View style={pdfStyles.items}>
+          <View style={pdfStyles.itemsHeader}>
+            <PDFText style={pdfStyles.description}>Description</PDFText>
+            <PDFText style={pdfStyles.quantity}>Qty</PDFText>
+            <PDFText style={pdfStyles.price}>Price</PDFText>
+            <PDFText style={pdfStyles.price}>Amount</PDFText>
+          </View>
+          {lines.map((line, index) => (
+            <View key={index} style={pdfStyles.itemRow} wrap={false}>
+              <PDFText style={pdfStyles.description}>{line.description}</PDFText>
+              <PDFText style={pdfStyles.quantity}>{line.quantity}</PDFText>
+              <PDFText style={pdfStyles.price}>{toMoney(line.unitPrice)}</PDFText>
+              <PDFText style={pdfStyles.price}>{toMoney(line.amount)}</PDFText>
             </View>
-          );
-        })}
-      </View>
-
-      {/* Totals */}
-      <View style={pdfStyles.totalSection}>
-        {(() => {
-          const currency = getCurrencyByCode(data.currency || 'GBP');
-          const symbol = currency?.symbol || '£';
-          const subtotal = data.items.reduce((sum, item) => {
-            const quantity = item.quantity === '' || item.quantity === 0 ? 1 : item.quantity;
-            const unitPrice = item.unitPrice === '' || item.unitPrice === 0 ? 0 : item.unitPrice;
-            return sum + (quantity * unitPrice);
-          }, 0);
-          const vat = subtotal * 0.2;
-          const total = subtotal + vat;
-          
-          return (
-            <>
-              <View style={pdfStyles.totalRow}>
-                <PDFText style={pdfStyles.totalLabel}>Subtotal:</PDFText>
-                <PDFText style={pdfStyles.totalValue}>
-                  {symbol}{subtotal.toFixed(2)}
-                </PDFText>
-              </View>
-              <View style={pdfStyles.totalRow}>
-                <PDFText style={pdfStyles.totalLabel}>VAT (20%):</PDFText>
-                <PDFText style={pdfStyles.totalValue}>
-                  {symbol}{vat.toFixed(2)}
-                </PDFText>
-              </View>
-              <View style={pdfStyles.totalRow}>
-                <PDFText style={pdfStyles.totalLabel}>Total:</PDFText>
-                <PDFText style={pdfStyles.totalValue}>
-                  {symbol}{total.toFixed(2)}
-                </PDFText>
-              </View>
-            </>
-          );
-        })()}
-      </View>
-
-      {/* Standard UK Bill Bank Details Section */}
-      <View style={pdfStyles.bankDetailsSection}>
-        <PDFText style={pdfStyles.bankDetailsTitle}>BANK DETAILS</PDFText>
-        <View style={pdfStyles.bankDetailsRow}>
-          <PDFText style={pdfStyles.bankDetailsLabel}>Account Name:</PDFText>
-          <PDFText style={pdfStyles.bankDetailsValue}>{data.accountName || ''}</PDFText>
+          ))}
         </View>
-        {(() => {
-          const currency = data.currency || 'GBP';
-          switch (currency) {
-            case 'EUR':
-              return (
-                <View style={pdfStyles.bankDetailsRow}>
-                  <PDFText style={pdfStyles.bankDetailsLabel}>IBAN:</PDFText>
-                  <PDFText style={pdfStyles.bankDetailsValue}>{data.iban || ''}</PDFText>
-                </View>
-              );
-            case 'USD':
-              return (
-                <>
-                  <View style={pdfStyles.bankDetailsRow}>
-                    <PDFText style={pdfStyles.bankDetailsLabel}>IBAN:</PDFText>
-                    <PDFText style={pdfStyles.bankDetailsValue}>{data.iban || ''}</PDFText>
-                  </View>
-                  <View style={pdfStyles.bankDetailsRow}>
-                    <PDFText style={pdfStyles.bankDetailsLabel}>Swift/BIC:</PDFText>
-                    <PDFText style={pdfStyles.bankDetailsValue}>{data.swiftBic || ''}</PDFText>
-                  </View>
-                </>
-              );
-            case 'GBP':
-            default:
-              return (
-                <>
-                  <View style={pdfStyles.bankDetailsRow}>
-                    <PDFText style={pdfStyles.bankDetailsLabel}>Sort Code:</PDFText>
-                    <PDFText style={pdfStyles.bankDetailsValue}>{data.sortCode || ''}</PDFText>
-                  </View>
-                  <View style={pdfStyles.bankDetailsRow}>
-                    <PDFText style={pdfStyles.bankDetailsLabel}>Account Number:</PDFText>
-                    <PDFText style={pdfStyles.bankDetailsValue}>{data.accountNumber || ''}</PDFText>
-                  </View>
-                </>
-              );
-          }
-        })()}
-        <View style={pdfStyles.bankDetailsRow}>
-          <PDFText style={pdfStyles.bankDetailsLabel}>Reference:</PDFText>
-          <PDFText style={pdfStyles.bankDetailsValue}>{data.invoiceNumber}</PDFText>
-        </View>
-        
-        <View style={pdfStyles.bankDetailsBox}>
-          <PDFText style={pdfStyles.bankDetailsBoxTitle}>IMPORTANT - Please quote your reference number when making payment</PDFText>
-          <PDFText style={pdfStyles.bankDetailsBoxText}>• Use your invoice number as the payment reference</PDFText>
-          <PDFText style={pdfStyles.bankDetailsBoxText}>• Payment should be made within 30 days</PDFText>
-          <PDFText style={pdfStyles.bankDetailsBoxText}>• Bank transfers may take 2-3 working days to clear</PDFText>
-        </View>
-      </View>
 
-      {/* Footer */}
-      <View style={pdfStyles.footer}>
-        <PDFText>This is not a real invoice. Don't pay!</PDFText>
-      </View>
-    </Page>
-  </Document>
+        <View style={pdfStyles.totals} wrap={false}>
+          <View style={pdfStyles.subtotalRow}>
+            <PDFText>Subtotal</PDFText>
+            <PDFText>{toMoney(subtotal)}</PDFText>
+          </View>
+          <View style={pdfStyles.subtotalRow}>
+            <PDFText>VAT (20%)</PDFText>
+            <PDFText>{toMoney(vat)}</PDFText>
+          </View>
+          <View style={[pdfStyles.totalRow, pdfStyles.grandTotal]}>
+            <PDFText>Total</PDFText>
+            <PDFText>{toMoney(total)}</PDFText>
+          </View>
+        </View>
+
+        <View style={pdfStyles.payment} wrap={false}>
+          <PDFText style={pdfStyles.paymentTitle}>Pay by bank transfer</PDFText>
+          <View style={pdfStyles.paymentFields}>
+            {toPaymentFields(data).map(([label, value]) => (
+              <View key={label} style={pdfStyles.paymentField}>
+                <PDFText style={pdfStyles.muted}>{label}</PDFText>
+                <PDFText style={pdfStyles.paymentValue}>{value}</PDFText>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <PDFText style={pdfStyles.disclaimer} fixed>
+          This is not a real invoice. Don't pay!
+        </PDFText>
+      </Page>
+    </Document>
   );
 };
