@@ -94,11 +94,11 @@
   /* Soft pastel haze behind the invoice (after Luma's sign-in page): peach in the middle, pink and lilac low
      on the left, cream up top, mint on the right */
   --canvas-gradient:
-    radial-gradient(55% 45% at 55% 62%, rgb(250 218 198 / 0.7) 0%, rgb(250 218 198 / 0) 100%),
-    radial-gradient(55% 45% at 18% 90%, rgb(242 212 234 / 0.85) 0%, rgb(242 212 234 / 0) 100%),
-    radial-gradient(45% 40% at 15% 25%, rgb(250 239 212 / 0.75) 0%, rgb(250 239 212 / 0) 100%),
-    radial-gradient(40% 50% at 100% 40%, rgb(212 237 235 / 0.8) 0%, rgb(212 237 235 / 0) 100%),
-    radial-gradient(50% 40% at 85% 100%, rgb(232 220 246 / 0.7) 0%, rgb(232 220 246 / 0) 100%);
+    radial-gradient(55% 45% at 55% 62%, rgb(250 218 198 / 0.45) 0%, rgb(250 218 198 / 0) 100%),
+    radial-gradient(55% 45% at 18% 90%, rgb(242 212 234 / 0.55) 0%, rgb(242 212 234 / 0) 100%),
+    radial-gradient(45% 40% at 15% 25%, rgb(250 239 212 / 0.45) 0%, rgb(250 239 212 / 0) 100%),
+    radial-gradient(40% 50% at 100% 40%, rgb(212 237 235 / 0.5) 0%, rgb(212 237 235 / 0) 100%),
+    radial-gradient(50% 40% at 85% 100%, rgb(232 220 246 / 0.45) 0%, rgb(232 220 246 / 0) 100%);
   --sheet-shadow:
     0 0 0 1px rgb(0 0 0 / 0.04),
     0 1px 2px rgb(0 0 0 / 0.04),

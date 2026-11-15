@@ -151,13 +151,14 @@ export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) =
         className="relative mt-5 aspect-[210/297] w-full overflow-hidden rounded-[10px] bg-white shadow-sheet data-keyboard-focus:outline-2 data-keyboard-focus:outline-offset-4 lg:aspect-auto lg:max-h-[calc(100cqw*297/210-3px)] lg:min-h-0 lg:flex-1"
       >
         {/* The viewer is overscanned to hide the dark margin it draws around the page, so the page reads as
-            one white sheet even when scrolled to its end: 5px is cut off at the top, left and right, and 8px
-            at the bottom (the margin below the page is 7px at full size) */}
+            one white sheet even when scrolled to its end: 5px is cut off at the top, 12px at the left and right
+            (Chrome now leaves up to 12px at the sides), and 8px at the bottom (the margin below the page is 7px
+            at full size) */}
         {pdfBlob && isNearViewport ? (
           <PDFViewer
             key={pdfKey}
             showToolbar={false}
-            className="absolute -top-[5px] -left-[5px] block h-[calc(100%+13px)] w-[calc(100%+10px)] max-w-none border-0"
+            className="absolute -top-[5px] -left-[12px] block h-[calc(100%+13px)] w-[calc(100%+24px)] max-w-none border-0"
             innerRef={(frame) => frame?.setAttribute('title', 'Invoice PDF preview')}
           >
             {pdfDocument}
