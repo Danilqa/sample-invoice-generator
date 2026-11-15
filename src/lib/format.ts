@@ -1,6 +1,7 @@
-// Same digits as the generated PDF: toFixed(2) with no thousands separators (e.g. 3588.71)
+// Same digits as the generated PDF: two decimals with thousands separators (e.g. 3,588.71)
 export function splitAmount(value: number): { whole: string; cents: string } {
-  const [whole, cents = ''] = value.toFixed(2).split('.');
+  const formatted = value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const [whole, cents = ''] = formatted.split('.');
   return { whole, cents };
 }
 
