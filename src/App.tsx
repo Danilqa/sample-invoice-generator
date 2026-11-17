@@ -4,6 +4,7 @@ import { Logo } from './components/Logo';
 import { StarBanner } from './components/StarBanner';
 import { ThemeMenu } from './components/ThemeMenu';
 import { useTheme } from './hooks/useTheme';
+import { cn } from '@/lib/utils';
 import { generateFakeInvoice, generatePDFBlob, downloadPDF } from './utils';
 import type { InvoiceData, InvoiceItem, BankDetailsUpdate } from './types/invoice';
 
@@ -107,7 +108,9 @@ function App() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col lg:h-dvh">
+    // The header leaves room for the star banner above it; once the banner is gone that room is an empty strip
+    // at the top of the page, so the header takes the short-screen height instead
+    <div className={cn('flex min-h-dvh flex-col lg:h-dvh', bannerDismissed && '[--header-h:3.5rem]')}>
       {/* GitHub Star Banner */}
       {!bannerDismissed && <StarBanner onDismiss={dismissBanner} />}
 
