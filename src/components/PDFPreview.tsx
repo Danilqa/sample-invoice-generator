@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode, RefObject } from 'react';
-import { PDFViewer } from '@react-pdf/renderer';
 import { ArrowUpRight } from 'lucide-react';
-import { InvoicePDF } from './InvoicePDF';
 import { Button } from '@/components/ui/button';
 import type { InvoiceData } from '../types/invoice';
 
@@ -79,9 +77,15 @@ export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) =
   const [isNearViewport, setIsNearViewport] = useState(shouldMountEagerly);
   const hasKeyboardFocus = useKeyboardFocusInFrame(sheetRef);
 
-  // PDFViewer renders the PDF again (and reloads its iframe, dropping focus) whenever it gets a new
-  // document element, so only make one when the invoice data changes, not on every render
-  const pdfDocument = useMemo(() => <InvoicePDF data={invoiceData} />, [invoiceData]);
+  // The viewer shows the blob the Download button saves, so each change is rendered once. Its URL is revoked once a
+  // newer PDF replaces it; a tab opened from the preview has its own.
+  const [frameUrl, setFrameUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!pdfBlob) return;
+    const url = URL.createObjectURL(pdfBlob);
+    setFrameUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [pdfBlob]);
 
   useEffect(() => {
     const sheet = sheetRef.current;
@@ -99,19 +103,6 @@ export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) =
     observer.observe(sheet);
     return () => observer.disconnect();
   }, [isNearViewport]);
-
-  // Create a unique key that changes whenever any relevant data changes
-  const pdfKey = JSON.stringify({
-    invoiceNumber: invoiceData.invoiceNumber,
-    sortCode: invoiceData.sortCode,
-    accountNumber: invoiceData.accountNumber,
-    accountName: invoiceData.accountName,
-    iban: invoiceData.iban,
-    companyName: invoiceData.companyName,
-    clientName: invoiceData.clientName,
-    currency: invoiceData.currency,
-    items: invoiceData.items
-  });
 
   return (
     // Below lg the preview sits under the form, so it takes the form's content width (its 600px column minus
@@ -154,15 +145,14 @@ export const PDFPreview = ({ invoiceData, pdfBlob, actions }: PDFPreviewProps) =
             one white sheet even when scrolled to its end: 5px is cut off at the top, 12px at the left and right
             (Chrome now leaves up to 12px at the sides), and 8px at the bottom (the margin below the page is 7px
             at full size) */}
-        {pdfBlob && isNearViewport ? (
-          <PDFViewer
-            key={pdfKey}
-            showToolbar={false}
+        {frameUrl && isNearViewport ? (
+          // A new frame per PDF: changing the src of the same one would add a back-button entry for every edit
+          <iframe
+            key={frameUrl}
+            src={`${frameUrl}#toolbar=0`}
+            title="Invoice PDF preview"
             className="absolute -top-[5px] -left-[12px] block h-[calc(100%+13px)] w-[calc(100%+24px)] max-w-none border-0"
-            innerRef={(frame) => frame?.setAttribute('title', 'Invoice PDF preview')}
-          >
-            {pdfDocument}
-          </PDFViewer>
+          />
         ) : (
           <SheetPlaceholder />
         )}

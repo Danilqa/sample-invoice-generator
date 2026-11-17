@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { InvoiceForm, PDFPreview } from './components';
 import { Logo } from './components/Logo';
 import { StarBanner } from './components/StarBanner';
@@ -14,23 +14,43 @@ function getBannerDismissed(): boolean {
   return false;
 }
 
+// How long typing has to pause before the PDF is rendered again. A render blocks the page for a few hundred
+// milliseconds, so rendering on every keystroke made typing lag.
+const TYPING_RENDER_DELAY_MS = 300;
+
+interface RenderedPDF {
+  data: InvoiceData;
+  blob: Blob;
+}
+
 function App() {
-  const [invoiceData, setInvoiceData] = useState<InvoiceData>(generateFakeInvoice());
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [invoiceData, setInvoiceData] = useState<InvoiceData>(() => generateFakeInvoice());
+  const [pdf, setPdf] = useState<RenderedPDF | null>(null);
   const { themePreference, setThemePreference } = useTheme();
   const [bannerDismissed, setBannerDismissed] = useState(getBannerDismissed);
+  // Typing waits for a pause before the PDF is rendered; picks and Regenerate render it right away
+  const renderDelayRef = useRef(0);
 
-  // Generate invoice on component mount
+  // Renders the PDF for the latest data only: a newer change cancels a pending render and drops an unfinished one
   useEffect(() => {
-    // Add a small delay to ensure component is fully mounted
-    const timer = setTimeout(() => {
-      handleGenerate(false);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []); // Empty dependency array - only run once on mount
+    let isStale = false;
+    const timer = setTimeout(async () => {
+      const blob = await generatePDFBlob(invoiceData);
+      if (!isStale) setPdf({ data: invoiceData, blob });
+    }, renderDelayRef.current);
 
-  const handleGenerate = async (preserveBankDetails: boolean = false) => {
+    return () => {
+      isStale = true;
+      clearTimeout(timer);
+    };
+  }, [invoiceData]);
+
+  const updateInvoiceData = (data: InvoiceData, renderDelay: number) => {
+    renderDelayRef.current = renderDelay;
+    setInvoiceData(data);
+  };
+
+  const handleGenerate = (preserveBankDetails: boolean = false) => {
     const newData = generateFakeInvoice(invoiceData.currency as 'GBP' | 'EUR' | 'USD');
     
     // Preserve contact information (client details)
@@ -50,29 +70,20 @@ function App() {
       updatedData.swiftBic = invoiceData.swiftBic;
     }
     
-    setInvoiceData(updatedData);
-    
-    // Generate PDF blob
-    const blob = await generatePDFBlob(updatedData);
-    setPdfBlob(blob);
+    updateInvoiceData(updatedData, 0);
   };
 
-  const handleDownload = () => {
-    if (pdfBlob) {
-      downloadPDF(pdfBlob, invoiceData.invoiceNumber);
-    }
+  const handleDownload = async () => {
+    // The preview may still be waiting for typing to pause, so render the latest data if it's behind
+    const blob = pdf?.data === invoiceData ? pdf.blob : await generatePDFBlob(invoiceData);
+    downloadPDF(blob, invoiceData.invoiceNumber);
   };
 
-  const handleUpdateItems = async (items: InvoiceItem[]) => {
-    const updatedData = { ...invoiceData, items };
-    setInvoiceData(updatedData);
-    
-    // Regenerate PDF blob with updated items
-    const blob = await generatePDFBlob(updatedData);
-    setPdfBlob(blob);
+  const handleUpdateItems = (items: InvoiceItem[]) => {
+    updateInvoiceData({ ...invoiceData, items }, TYPING_RENDER_DELAY_MS);
   };
 
-  const handleUpdateBankDetails = async (bankDetails: BankDetailsUpdate) => {
+  const handleUpdateBankDetails = (bankDetails: BankDetailsUpdate) => {
     const updatedData = { 
       ...invoiceData, 
       sortCode: bankDetails.sortCode || '', 
@@ -82,20 +93,12 @@ function App() {
       iban: bankDetails.iban || '',
       swiftBic: bankDetails.swiftBic || ''
     };
-    setInvoiceData(updatedData);
-    
-    // Regenerate PDF blob with updated bank details
-    const blob = await generatePDFBlob(updatedData);
-    setPdfBlob(blob);
+    updateInvoiceData(updatedData, 0);
   };
 
-  const handleUpdateField = async (field: keyof InvoiceData, value: string) => {
-    const updatedData = { ...invoiceData, [field]: value };
-    setInvoiceData(updatedData);
-    
-    // Regenerate PDF blob with updated field
-    const blob = await generatePDFBlob(updatedData);
-    setPdfBlob(blob);
+  const handleUpdateField = (field: keyof InvoiceData, value: string) => {
+    // The currency is picked, not typed
+    updateInvoiceData({ ...invoiceData, [field]: value }, field === 'currency' ? 0 : TYPING_RENDER_DELAY_MS);
   };
 
   const dismissBanner = () => {
@@ -113,7 +116,7 @@ function App() {
           invoiceData={invoiceData}
           onGenerate={handleGenerate}
           onDownload={handleDownload}
-          pdfBlob={pdfBlob}
+          pdfBlob={pdf?.blob ?? null}
           onUpdateItems={handleUpdateItems}
           onUpdateBankDetails={handleUpdateBankDetails}
           onUpdateField={handleUpdateField}
@@ -139,8 +142,8 @@ function App() {
           className="bg-canvas-gradient flex flex-1 flex-col border-t px-5 pb-5 sm:px-8 lg:min-h-0 lg:min-w-0 lg:border-t-0 lg:px-10"
         >
           <PDFPreview
-            invoiceData={invoiceData}
-            pdfBlob={pdfBlob}
+            invoiceData={pdf?.data ?? invoiceData}
+            pdfBlob={pdf?.blob ?? null}
             actions={
               <ThemeMenu
                 value={themePreference}
