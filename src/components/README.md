@@ -27,8 +27,8 @@ short-screen density variables live in `src/index.css`.
 ### `PDFPreview.tsx`
 - **Purpose**: The live PDF preview under a "Preview" tab row
 - **Props**:
-  - `invoiceData`: The current invoice data
-  - `pdfBlob`: The current PDF blob; a placeholder sheet shows until it exists
+  - `invoiceData`: The invoice data the PDF was rendered from
+  - `pdfBlob`: The current PDF blob, shown in the browser's PDF viewer; a placeholder sheet shows until it exists
   - `actions`: Optional extra controls at the right end of the tab row
 - **Features**:
   - Shows the PDF as a white sheet and offers to open it in a new tab
